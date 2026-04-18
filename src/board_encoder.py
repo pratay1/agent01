@@ -7,30 +7,13 @@ def board_to_tensor(board: chess.Board) -> torch.Tensor:
 
     board_for_perspective = board if board.turn == chess.WHITE else board.mirror()
 
-    piece_map = board_for_perspective.piece_map()
-    for square, piece in piece_map.items():
+    for square, piece in board_for_perspective.piece_map().items():
         row = 7 - (square // 8)
         col = square % 8
-
         if piece.color == chess.WHITE:
-            plane_idx = {
-                chess.PAWN: 0,
-                chess.KNIGHT: 1,
-                chess.BISHOP: 2,
-                chess.ROOK: 3,
-                chess.QUEEN: 4,
-                chess.KING: 5
-            }[piece.piece_type]
+            plane_idx = [chess.PAWN, chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN, chess.KING].index(piece.piece_type)
         else:
-            plane_idx = {
-                chess.PAWN: 6,
-                chess.KNIGHT: 7,
-                chess.BISHOP: 8,
-                chess.ROOK: 9,
-                chess.QUEEN: 10,
-                chess.KING: 11
-            }[piece.piece_type]
-
+            plane_idx = 6 + [chess.PAWN, chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN, chess.KING].index(piece.piece_type)
         planes[plane_idx, row, col] = 1.0
 
     planes[12, :, :] = 1.0 if board.turn == chess.WHITE else 0.0
@@ -49,6 +32,6 @@ def board_to_tensor(board: chess.Board) -> torch.Tensor:
         col = board.ep_square % 8
         planes[17, row, col] = 1.0
 
-    planes[18, :, :] = board.halfmove_clock / 100.0
+    planes[18, :, :] = min(board.halfmove_clock / 100.0, 1.0)
 
     return planes.unsqueeze(0)
