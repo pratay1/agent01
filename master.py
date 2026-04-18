@@ -44,10 +44,6 @@ def save_checkpoint_and_export(network, trainer):
         logger.log_exception(e, "save_checkpoint_and_export")
         print(f"Error in save_checkpoint_and_export: {e}")
         raise
-    except Exception as e:
-        logger.error(f"Error in save_checkpoint_and_export: {e}", exc_info=True)
-        print(f"[red]Error saving checkpoint/exporting: {e}[/]")
-        raise
 
 
 def build_engine():

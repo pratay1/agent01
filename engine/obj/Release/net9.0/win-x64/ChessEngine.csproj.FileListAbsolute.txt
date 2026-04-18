@@ -203,3 +203,4 @@ C:\Users\prata\agent01\engine\obj\Release\net9.0\win-x64\refint\ChessEngine.dll
 C:\Users\prata\agent01\engine\obj\Release\net9.0\win-x64\ChessEngine.pdb
 C:\Users\prata\agent01\engine\obj\Release\net9.0\win-x64\ChessEngine.genruntimeconfig.cache
 C:\Users\prata\agent01\engine\obj\Release\net9.0\win-x64\ref\ChessEngine.dll
+C:\Users\prata\agent01\engine\obj\Release\net9.0\win-x64\ChessEngine.sourcelink.json
