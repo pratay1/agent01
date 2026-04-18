@@ -284,9 +284,9 @@ def run_training(args):
     except Exception as e:
         console.print(f"[red]Error: {e}[/]")
 
-    console.print("\n[white]═══════════════════════════════════════════════════════════[/]")
+    console.print("\n[white]+======================================================+[/]")
     console.print(f"[white]  Epochs: {epoch}  |  Games: {total_games}  |  Best Elo: {best_elo}[/]")
-    console.print("[white]═══════════════════════════════════════════════════════════[/]")
+    console.print("[white]+======================================================+[/]")
 
     save_checkpoint_and_export(network, trainer)
     build_engine()
