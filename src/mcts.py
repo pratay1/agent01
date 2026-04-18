@@ -2,41 +2,30 @@ import math
 import numpy as np
 import torch
 from typing import Dict, Optional, Tuple
-import src.move_encoder
 import chess
 from src.move_encoder import move_to_index, index_to_move, get_legal_move_indices
 
 
 class MCTSNode:
+    __slots__ = ['visit_count', 'value_sum', 'prior', 'children', 'expanded']
+
     def __init__(self, prior: float = 0.0):
         self.visit_count = 0
         self.value_sum = 0.0
         self.prior = prior
-        self.children: Dict[int, 'MCTSNode'] = {}
+        self.children: Dict[int, MCTSNode] = {}
         self.expanded = False
 
     def get_value(self, cpuct: float, parent_visit: int) -> float:
         if self.visit_count == 0:
             return float('inf')
         q = self.value_sum / self.visit_count
-        u = cpuct * self.prior * math.sqrt(parent_visit) / (1 + self.visit_count)
+        u = cpuct * self.prior * (parent_visit ** 0.5) / (1 + self.visit_count)
         return q + u
-
-    def get_best_child(self, cpuct: float) -> Optional['MCTSNode']:
-        if not self.children:
-            return None
-        best_child = None
-        best_value = float('-inf')
-        for child in self.children.values():
-            value = child.get_value(cpuct, self.visit_count)
-            if value > best_value:
-                best_value = value
-                best_child = child
-        return best_child
 
 
 class MCTS:
-    def __init__(self, network, cpuct: float = 1.25, num_simulations: int = 800,
+    def __init__(self, network, cpuct: float = 1.25, num_simulations: int = 100,
                  temperature: float = 1.0, dirichlet_alpha: float = 0.3,
                  dirichlet_epsilon: float = 0.25):
         self.network = network
@@ -46,7 +35,7 @@ class MCTS:
         self.dirichlet_alpha = dirichlet_alpha
         self.dirichlet_epsilon = dirichlet_epsilon
 
-    def search(self, board: chess.Board, is_root: bool = False) -> Tuple[np.ndarray, float]:
+    def search(self, board: chess.Board, is_root: bool = False) -> Tuple[np.ndarray, int]:
         root = MCTSNode()
 
         if is_root:
@@ -74,24 +63,24 @@ class MCTS:
             else:
                 best_idx = np.random.choice(list(root.children.keys()))
 
-        return visit_counts, best_idx
+        return visit_counts, int(best_idx)
 
     def _run_simulation(self, board: chess.Board, node: MCTSNode):
         board = board.copy()
         path = [node]
 
         while node.expanded and not board.is_game_over():
-            best_child = node.get_best_child(self.cpuct)
+            best_child = self._select_child(node)
             if best_child is None:
                 break
 
-            move = index_to_move(list(node.children.keys())[list(node.children.values()).index(best_child)], board)
+            move = index_to_move(best_child[0], board)
             if move is None:
                 break
 
             board.push(move)
-            path.append(best_child)
-            node = best_child
+            path.append(best_child[1])
+            node = best_child[1]
 
         if not board.is_game_over():
             self.network.eval()
@@ -115,12 +104,7 @@ class MCTS:
         else:
             outcome = board.outcome()
             if outcome is not None:
-                if outcome.winner == board.turn:
-                    value = -1.0
-                elif outcome.winner is None:
-                    value = 0.0
-                else:
-                    value = 1.0
+                value = -1.0 if outcome.winner == board.turn else (1.0 if outcome.winner else 0.0)
             else:
                 value = 0.0
 
@@ -128,7 +112,19 @@ class MCTS:
         for n in reversed(path):
             n.visit_count += 1
             n.value_sum += value_sign * value
-            value_sign *= -1
+            value_sign *= -1.0
+
+    def _select_child(self, node: MCTSNode) -> Optional[Tuple[int, MCTSNode]]:
+        if not node.children:
+            return None
+        best_value = float('-inf')
+        best = None
+        for idx, child in node.children.items():
+            value = child.get_value(self.cpuct, node.visit_count)
+            if value > best_value:
+                best_value = value
+                best = (idx, child)
+        return best
 
     def _get_visit_counts(self, root: MCTSNode) -> np.ndarray:
         visit_counts = np.zeros(4672)
