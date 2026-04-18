@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "Yb0CxopiYfc=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\prata\\agent01\\engine\\ChessEngine.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.ml.onnxruntime\\1.17.3\\microsoft.ml.onnxruntime.1.17.3.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.ml.onnxruntime.managed\\1.17.3\\microsoft.ml.onnxruntime.managed.1.17.3.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.10\\microsoft.net.illink.tasks.9.0.10.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\9.0.10\\microsoft.netcore.app.runtime.win-x64.9.0.10.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\9.0.10\\microsoft.windowsdesktop.app.runtime.win-x64.9.0.10.nupkg.sha512",
+    "C:\\Users\\prata\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\9.0.10\\microsoft.aspnetcore.app.runtime.win-x64.9.0.10.nupkg.sha512"
+  ],
+  "logs": []
+}

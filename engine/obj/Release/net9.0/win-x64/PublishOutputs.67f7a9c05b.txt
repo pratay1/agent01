@@ -1,0 +1,2 @@
+C:\Users\prata\agent01\build\ChessEngine.pdb
+C:\Users\prata\agent01\build\ChessEngine.exe
