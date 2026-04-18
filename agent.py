@@ -23,8 +23,8 @@ os.makedirs(os.path.join(BASE_DIR, "checkpoints"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "exports"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
 
-# Setup logging
-logger = setup_logging()
+# Setup logging (returns a logger, but we'll keep our custom logger for now)
+setup_logging()
 
 
 def save_checkpoint_and_export(network, trainer):
