@@ -1,16 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
-from typing import Dict, Any, Optional, Tuple
-import numpy as np
-from src.network import create_network
-from src.replay_buffer import ReplayBuffer
 
 
 class Trainer:
-    def __init__(self, network: nn.Module, buffer: ReplayBuffer, 
-                 learning_rate: float = 0.001, weight_decay: float = 1e-4,
+    def __init__(self, network: nn.Module, buffer, 
+                 learning_rate: float = 0.002, weight_decay: float = 1e-4,
                  batch_size: int = 2048):
         self.network = network
         self.buffer = buffer
@@ -22,11 +17,7 @@ class Trainer:
         self.policy_loss_fn = nn.CrossEntropyLoss()
         self.value_loss_fn = nn.MSELoss()
 
-        self.current_policy_loss = 0.0
-        self.current_value_loss = 0.0
-        self.current_combined_loss = 0.0
-
-    def train_step(self) -> Dict[str, float]:
+    def train_step(self) -> dict:
         states, policies, values = self.buffer.sample()
         
         if states is None:
@@ -47,14 +38,10 @@ class Trainer:
         self.optimizer.step()
         self.scheduler.step()
 
-        self.current_policy_loss = policy_loss.item()
-        self.current_value_loss = value_loss.item()
-        self.current_combined_loss = combined_loss.item()
-
         return {
-            "policy_loss": self.current_policy_loss,
-            "value_loss": self.current_value_loss,
-            "combined_loss": self.current_combined_loss
+            "policy_loss": policy_loss.item(),
+            "value_loss": value_loss.item(),
+            "combined_loss": combined_loss.item()
         }
 
     def get_learning_rate(self) -> float:

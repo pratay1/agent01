@@ -8,17 +8,12 @@ class ReplayBuffer:
         self.max_size = max_size
         self.batch_size = batch_size
         self.buffer: List[Tuple[torch.Tensor, np.ndarray, int]] = []
-        self.game_ids: List[int] = []
 
     def add_game(self, states: List[torch.Tensor], policy_targets: List[np.ndarray], value_targets: List[int]):
-        game_id = len(self.game_ids)
-        self.game_ids.append(game_id)
-
         for state, policy, value in zip(states, policy_targets, value_targets):
             if len(self.buffer) >= self.max_size:
                 self.buffer.pop(0)
             self.buffer.append((state, policy, value))
-            self.game_ids.append(game_id)
 
     def sample(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if len(self.buffer) < self.batch_size:
