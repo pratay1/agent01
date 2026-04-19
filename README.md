@@ -21,7 +21,7 @@ The training process runs indefinitely until you stop it (Ctrl+C). At that point
 ### Install
 
 ```bash
-cd C:\Users\prata\agent01
+cd C:\Users\username\agent01
 pip install -r requirements.txt
 ```
 
@@ -53,6 +53,7 @@ The executable appears at C:\Users\prata\agent01\build\ChessEngine.exe.
 The network is a residual architecture with configurable depth. Default: 3 blocks with 64 channels.
 
 Input: 19 binary planes of shape 8×8:
+
 - Planes 0–5: current player pieces (pawn, knight, bishop, rook, queen, king)
 - Planes 6–11: opponent pieces
 - Plane 12: current player color
@@ -61,12 +62,14 @@ Input: 19 binary planes of shape 8×8:
 - Plane 18: halfmove clock
 
 Heads:
+
 - Policy head: logits over 4672 possible moves
 - Value head: scalar between −1 and +1 (win probability from current player perspective)
 
 ### Move Encoding
 
 AlphaZero-style 73-move-per-square encoding:
+
 - 64 from-squares × 73 move types = 4672 total
 - Move types: 56 queen-like slides (8 directions × 7 distances), 8 knight moves, 9 underpromotions
 
@@ -77,6 +80,7 @@ Implemented in src/move_encoder.py with move_to_index() and index_to_move().
 PUCT selection formula: U(s,a) = Q(s,a) + c_puct × P(s,a) × sqrt(N(s)) / (1 + N(s,a))
 
 Parameters:
+
 - c_puct: 1.25
 - Simulations: 200–800 (configurable)
 - Temperature: 1.0 early, 0 late
@@ -113,7 +117,7 @@ After every epoch the latest checkpoint is written. On Ctrl+C the loop finishes 
 ## Project Structure
 
 ```
-C:\Users\prata\agent01
+C:\Users\username\agent01
 │
 ├── master.py                 # Main training script
 ├── requirements.txt          # Python dependencies
