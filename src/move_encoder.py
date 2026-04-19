@@ -94,6 +94,9 @@ def index_to_move(index: int, board: chess.Board) -> chess.Move:
         from_row = 7 - (from_square // 8)
         from_col = from_square % 8
 
+        delta_row = 0
+        delta_col = 0
+
         if move_type < 8:
             deltas = [
                 (0, 1), (0, -1), (-1, 0), (1, 0),
@@ -112,31 +115,40 @@ def index_to_move(index: int, board: chess.Board) -> chess.Move:
             except IndexError:
                 logger.warning(f"Invalid knight move type: {move_type - 8}, defaulting to (0,0)")
                 delta_row, delta_col = 0, 0
-        else:
+        elif move_type < 56:
+            slide_type = (move_type - 16) // 10
+            distance = ((move_type - 16) % 10) + 1
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+            if slide_type < len(directions):
+                dir_row, dir_col = directions[slide_type]
+                delta_row = dir_row * distance
+                delta_col = dir_col * distance
+                logger.debug(f"Sliding move delta: ({delta_row}, {delta_col}), distance={distance}")
+            else:
+                logger.warning(f"Invalid slide type: {slide_type}")
+                return None
+        elif move_type < 73:
             promotion_type = (move_type - 56) % 4
             base_type = (move_type - 56) // 4
-            logger.debug(f"Promotion move: base_type={base_type}, promotion_type={promotion_type}")
 
             if base_type == 0:
                 delta_row = -1
                 delta_col = 0
-                promotion = chess.QUEEN if move_type < 60 else None
             elif base_type == 1:
                 delta_row = 1
                 delta_col = 0
-                promotion = chess.QUEEN if move_type < 64 else None
             elif base_type == 2:
                 delta_row = 0
                 delta_col = 1
-                promotion = chess.QUEEN if move_type < 68 else None
             else:
                 delta_row = 0
                 delta_col = -1
-                promotion = chess.QUEEN
 
-            if promotion is not None and promotion_type < 4:
-                promotion = [chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN][promotion_type]
-                logger.debug(f"Set promotion piece: {promotion}")
+            promotion = [chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN][promotion_type]
+            logger.debug(f"Promotion move: base_type={base_type}, promotion={promotion}")
+        else:
+            logger.warning(f"Invalid move type: {move_type}")
+            return None
 
         to_row = from_row + delta_row
         to_col = from_col + delta_col
@@ -150,11 +162,13 @@ def index_to_move(index: int, board: chess.Board) -> chess.Move:
         logger.debug(f"Final to_square: {to_square}")
 
         promotion = None
-        if move_type >= 56:
-            promotion = chess.QUEEN
-            logger.debug(f"Setting promotion to QUEEN for move_type >= 56")
+        if move_type >= 56 and move_type < 73:
+            promotion = [chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN][(move_type - 56) % 4]
 
         move = chess.Move(from_square, to_square, promotion=promotion)
+        if not move or move not in board.legal_moves:
+            logger.debug(f"Move {move} not legal, trying to find valid move")
+            return None
         logger.debug(f"Created move: {move.uci() if move else 'None'}")
         return move
     except Exception as e:
@@ -165,7 +179,7 @@ def index_to_move(index: int, board: chess.Board) -> chess.Move:
 def get_legal_move_indices(board: chess.Board) -> set:
     try:
         logger.debug("Getting legal move indices")
-        legal_moves = board.legal_moves
+        legal_moves = list(board.legal_moves)
         logger.debug(f"Found {len(legal_moves)} legal moves")
         
         indices = set()

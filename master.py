@@ -1,6 +1,5 @@
 import os
 import sys
-import signal
 import argparse
 import time
 import csv
@@ -10,27 +9,28 @@ import traceback
 from datetime import datetime
 
 import torch
+import matplotlib.pyplot as plt
+import io
+from PIL import Image
+import numpy as np
 
 # Import our logger
 from src.logger import get_logger, logger
 
-# Import logging setup (but don't override our logger)
+# Import logging setup
 from logging_setup import setup_logging
 
+# Setup logging - only INFO level to remove debug output
+import logging
+logging.basicConfig(level=logging.INFO)
+
 BASE_DIR = r"C:\Users\prata\agent01"
-
-os.makedirs(os.path.join(BASE_DIR, "checkpoints"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "exports"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
-
-# Setup logging (returns a logger, but we'll keep our custom logger for now)
-setup_logging()
 
 
 def save_checkpoint_and_export(network, trainer):
     try:
         logger.log_info("Starting checkpoint saving and ONNX export")
-        print("\n\nSaving checkpoint and exporting ONNX...")
+        print("\nSaving checkpoint and exporting ONNX...")
         checkpoint_path = os.path.join(BASE_DIR, "checkpoints", "checkpoint_latest.pt")
         trainer.save_checkpoint(checkpoint_path)
         logger.log_info(f"Checkpoint saved to {checkpoint_path}")
@@ -47,17 +47,17 @@ def save_checkpoint_and_export(network, trainer):
 
 
 def build_engine():
+    logger.log_info("Starting C# chess engine build")
+    print("\n\nBuilding C# chess engine...")
+    engine_dir = os.path.join(BASE_DIR, "engine")
+    build_dir = os.path.join(BASE_DIR, "build")
+
+    # Ensure build directory exists
+    os.makedirs(build_dir, exist_ok=True)
+    logger.log_info(f"Engine directory: {engine_dir}")
+    logger.log_info(f"Build directory: {build_dir}")
+
     try:
-        logger.log_info("Starting C# chess engine build")
-        print("\n\nBuilding C# chess engine...")
-        engine_dir = os.path.join(BASE_DIR, "engine")
-        build_dir = os.path.join(BASE_DIR, "build")
-
-        # Ensure build directory exists
-        os.makedirs(build_dir, exist_ok=True)
-        logger.log_info(f"Engine directory: {engine_dir}")
-        logger.log_info(f"Build directory: {build_dir}")
-
         result = subprocess.run(
             ["dotnet", "publish", "-c", "Release", "-r", "win-x64", "--self-contained", "true",
              "-p:PublishSingleFile=true", "-o", build_dir, "-p:OutputName=ChessEngine_new"],
@@ -66,76 +66,35 @@ def build_engine():
             text=True,
             timeout=300  # 5 minute timeout
         )
-
         if result.returncode != 0:
-            error_msg = f"Build failed with return code {result.returncode}: {result.stderr}"
-            logger.log_error(error_msg)
-            print(f"Build failed: {result.stderr}")
-            return False
-
-        logger.log_info("Dotnet publish completed successfully")
-
-        output_exe = os.path.join(build_dir, "ChessEngine_new.exe")
-        final_exe = os.path.join(build_dir, "ChessEngine.exe")
-
-        if os.path.exists(output_exe):
-            logger.log_info(f"Found output executable: {output_exe}")
-            if os.path.exists(final_exe):
-                logger.log_info(f"Removing existing final executable: {final_exe}")
-                os.remove(final_exe)
-            logger.log_info(f"Renaming {output_exe} to {final_exe}")
-            os.rename(output_exe, final_exe)
-            print(f"Engine built and replaced: {final_exe}")
-            logger.log_info(f"Engine build successful: {final_exe}")
-            return True
-        else:
-            error_msg = f"Expected output executable not found: {output_exe}"
-            logger.log_error(error_msg)
-            print(f"Build failed: Output executable not found at {output_exe}")
-            return False
+            raise RuntimeError(f"Build failed with return code {result.returncode}: {result.stderr}")
     except subprocess.TimeoutExpired as e:
-        error_msg = "Build process timed out after 5 minutes"
         logger.log_exception(e, "build_engine")
-        print(f"Build failed: {error_msg}")
-        return False
+        raise RuntimeError("Build process timed out after 5 minutes") from e
     except Exception as e:
         logger.log_exception(e, "build_engine")
-        print(f"Error in build_engine: {e}")
-        return False
+        raise RuntimeError(f"Build failed: {e}") from e
 
-        logger.info("Dotnet publish completed successfully")
-        logger.debug(f"Build stdout: {result.stdout}")
+    logger.log_info("Dotnet publish completed successfully")
 
-        output_exe = os.path.join(build_dir, "ChessEngine_new.exe")
-        final_exe = os.path.join(build_dir, "ChessEngine.exe")
-        
-        logger.debug(f"Checking for output executable: {output_exe}")
-        if os.path.exists(output_exe):
-            logger.info("Output executable found")
-            if os.path.exists(final_exe):
-                logger.debug(f"Removing existing final executable: {final_exe}")
-                os.remove(final_exe)
-            logger.debug(f"Renaming {output_exe} to {final_exe}")
-            os.rename(output_exe, final_exe)
-            print(f"Engine built and replaced: {final_exe}")
-            logger.info(f"Engine built successfully: {final_exe}")
-            return True
-        else:
-            error_msg = f"Expected output executable not found: {output_exe}"
-            logger.error(error_msg)
-            print(f"Build failed: {error_msg}")
-            return False
-            
-    except subprocess.TimeoutExpired:
-        error_msg = "Build process timed out after 5 minutes"
-        logger.error(error_msg)
+    output_exe = os.path.join(build_dir, "ChessEngine_new.exe")
+    final_exe = os.path.join(build_dir, "ChessEngine.exe")
+
+    if os.path.exists(output_exe):
+        logger.log_info(f"Found output executable: {output_exe}")
+        if os.path.exists(final_exe):
+            logger.log_info(f"Removing existing final executable: {final_exe}")
+            os.remove(final_exe)
+        logger.log_info(f"Renaming {output_exe} to {final_exe}")
+        os.rename(output_exe, final_exe)
+        print(f"Engine built and replaced: {final_exe}")
+        logger.log_info(f"Engine build successful: {final_exe}")
+        return
+    else:
+        error_msg = f"Expected output executable not found: {output_exe}"
+        logger.log_error(error_msg)
         print(f"Build failed: {error_msg}")
-        return False
-    except Exception as e:
-        error_msg = f"Unexpected error during build: {str(e)}"
-        logger.error(error_msg, exc_info=True)
-        print(f"Build failed: {error_msg}")
-        return False
+        raise FileNotFoundError(error_msg)
 
 
 def run_training(args):
@@ -149,13 +108,7 @@ def run_training(args):
         from rich.console import Group
 
         console = Console()
-        # Use ASCII characters to avoid Unicode encoding issues on Windows
-        console.print("[bold cyan]+======================================================+[/]")
-        console.print("[bold cyan]|           ChessAI Training Engine (v2.0)                 |[/]")
-        console.print("[bold cyan]+======================================================+[/]")
-        console.print("[yellow]Press ESC to stop training, save model, and build new engine[/]")
-        console.print()
-
+        
         logger.log_info("Importing training modules")
         from src.network import create_network
         from src.replay_buffer import ReplayBuffer
@@ -199,6 +152,9 @@ def run_training(args):
         epoch = start_epoch
         total_games = 0
         best_elo = 1200
+        elo_history = []
+        moves_history = []
+        current_game_num = 0
 
         logger.log_info("Setting up MCTS configuration")
         mcts_config = {
@@ -237,71 +193,173 @@ def run_training(args):
             return None
 
         logger.log_info("Setting up dashboard creation function")
+        
+        # Data tracking for graphs (declared in outer scope already)
+        
+        def create_elo_graph():
+            if len(elo_history) < 2:
+                return "No data yet"
+            # Simple ASCII bar graph
+            lines = []
+            min_elo = min(elo_history)
+            max_elo = max(elo_history)
+            range_elo = max(max_elo - min_elo, 1)
+            height = 8
+            for h in range(height, -1, -1):
+                threshold = min_elo + (range_elo * h / height)
+                line = ""
+                for elo in elo_history[-20:]:
+                    if elo >= threshold:
+                        line += "█"
+                    else:
+                        line += " "
+                lines.append(line)
+            return "\n".join(lines)
+        
+        def create_moves_graph():
+            if len(moves_history) < 2:
+                return "No data yet"
+            # Simple ASCII bar graph for moves per game
+            lines = []
+            max_moves = max(moves_history[-20:]) if moves_history[-20:] else 1
+            height = 8
+            for h in range(height, -1, -1):
+                threshold = max_moves * h / height
+                line = ""
+                for moves in moves_history[-20:]:
+                    if moves >= threshold:
+                        line += "█"
+                    else:
+                        line += " "
+                lines.append(line)
+            return "\n".join(lines)
+        
+        def make_progress_bar(current, total, width=20):
+            filled = int(width * current / max(total, 1))
+            return "[" + "█" * filled + "░" * (width - filled) + "]"
+        
         def make_dashboard():
             try:
-                t = Table(box=None, padding=(0, 2), show_header=False)
-                t.add_column(width=35)
-                t.add_column(width=35)
-                t.add_column(width=35)
-
-                elo_color = "green" if game_state['elo'] >= best_elo else "red"
+                # Calculate win rate from recent games
+                recent_games = min(100, total_games)
+                game_results_list = []
+                if os.path.exists(game_log_path):
+                    try:
+                        with open(game_log_path, 'r') as f:
+                            for line in f:
+                                try:
+                                    game_results_list.append(json.loads(line).get('result', 0))
+                                except:
+                                    pass
+                        game_results_list = game_results_list[-100:]
+                    except:
+                        pass
                 
-                t.add_row(
+                wins = sum(1 for r in game_results_list if r == 1)
+                draws = sum(1 for r in game_results_list if r == 0)
+                losses = sum(1 for r in game_results_list if r == -1)
+                total_recent = wins + draws + losses
+                win_rate = (wins / max(total_recent, 1)) * 100
+                
+                # Stats panel
+                stats_table = Table(box=None, padding=(0, 1), show_header=False)
+                stats_table.add_column(width=18)
+                stats_table.add_column(width=18)
+                
+                elo_color = "green" if game_state['elo'] >= best_elo else "red"
+                mode_color = "cyan" if game_state['mode'] == "Opening" else "yellow"
+                
+                stats_table.add_row(
                     f"[bold]Epoch:[/] [cyan]{game_state['epoch']}[/]",
-                    f"[bold]Mode:[/] [yellow]{game_state['mode']}[/]",
                     f"[bold]Elo:[/] [{elo_color}]{game_state['elo']}[/]"
                 )
-                t.add_row(
+                stats_table.add_row(
                     f"[bold]Total Games:[/] {game_state['games']}",
-                    f"[bold]Buffer:[/] [green]{game_state['buffer_pct']:.1%}[/]",
-                    f"[bold]MCTS Sims:[/] [magenta]{game_state['sims']}[/]"
+                    f"[bold]Best Elo:[/] [green]{best_elo}[/]"
                 )
-                t.add_row(
-                    f"[bold]Policy Loss:[/] [green]{game_state['policy_loss']:.4f}[/]",
-                    f"[bold]Value Loss:[/] [yellow]{game_state['value_loss']:.4f}[/]",
-                    f"[bold]Combined:[/] [cyan]{game_state['combined_loss']:.4f}[/]"
+                stats_table.add_row(
+                    f"[bold]Training:[/] [{mode_color}]{game_state['mode']}[/]",
+                    f"[bold]Sims:[/] {args.simulations}"
                 )
-                t.add_row(
-                    f"[bold]Epoch Time:[/] [green]{game_state['epoch_time']:.1f}s[/]",
-                    f"[bold]Best Elo:[/] [yellow]{best_elo}[/]",
-                    f"[bold]Games/Epoch:[/] {args.games_per_epoch}"
+                stats_table.add_row(
+                    f"[bold]Loss:[/] [cyan]{game_state['combined_loss']:.4f}[/]",
+                    f"[bold]Time:[/] {game_state['epoch_time']:.1f}s"
                 )
-
-                moves_display = "  ".join(game_state['last_moves'][-5:]) if game_state['last_moves'] else "[dim]waiting for moves...[/]"
                 
-                result_color = {
-                    "W": "green",
-                    "L": "red",
-                    "D": "yellow",
-                    "-": "dim"
-                }.get(str(game_state['game_result']), "white")
-
-                game_panel = Panel(
-                    f"[bold]Move:[/] [cyan]{game_state['current_move']}[/]\n"
-                    f"[bold]Last 5:[/] {moves_display}\n"
-                    f"[bold]Result:[/] [{result_color}]{game_state['game_result']}[/]",
-                    title="[bold green]Current Game[/]",
-                    border_style="green",
+                # Win rate panel
+                winrate_table = Table(box=None, padding=(0, 1), show_header=False)
+                winrate_table.add_column(width=25)
+                winrate_table.add_row(f"[bold]Last 100 Games:[/]")
+                winrate_table.add_row(f"[green]W:[/] {wins} ({wins/max(total_recent,1)*100:.0f}%)  [yellow]D:[/] {draws} ({draws/max(total_recent,1)*100:.0f}%)  [red]L:[/] {losses} ({losses/max(total_recent,1)*100:.0f}%)")
+                winrate_bar_len = 20
+                win_bar = int(win_rate * winrate_bar_len / 100)
+                winrate_table.add_row(f"[green]{'█' * win_bar}[/][red]{'░' * (winrate_bar_len - win_bar)}[/] {win_rate:.1f}%")
+                
+                # Progress bars
+                progress_table = Table(box=None, padding=(0, 1), show_header=False)
+                progress_table.add_column(width=30)
+                
+                epoch_bar = make_progress_bar(current_game_num, args.games_per_epoch, 25)
+                progress_table.add_row(f"[bold]Game:[/] {epoch_bar} {current_game_num}/{args.games_per_epoch}")
+                
+                buffer_bar = make_progress_bar(int(buffer.fill_percentage() * 25), 25)
+                progress_table.add_row(f"[bold]Buffer:[/] {buffer_bar} {game_state['buffer_pct']:.0%}")
+                
+                # Graphs
+                graph_table = Table(box=None, padding=(0, 1), show_header=False)
+                graph_table.add_column(width=24)
+                graph_table.add_column(width=24)
+                
+                elo_graph = create_elo_graph()
+                moves_graph = create_moves_graph()
+                
+                graph_table.add_row(
+                    Panel(elo_graph, title="[bold]Elo History", border_style="white", padding=(0, 0)),
+                    Panel(moves_graph, title="[bold]Moves/Game", border_style="white", padding=(0, 0))
+                )
+                
+                # Main layout
+                stats_panel = Panel(
+                    stats_table,
+                    title="[bold]Training Stats",
+                    border_style="white",
                     padding=(1, 2)
                 )
-
-                status_text = "[bold yellow]Press ESC to stop & build[/]"
                 
-                main_panel = Panel(
-                    t,
-                    title="[bold cyan]ChessAI Training Dashboard[/]",
-                    border_style="cyan",
+                winrate_panel = Panel(
+                    winrate_table,
+                    title="[bold]Win Rate",
+                    border_style="white",
                     padding=(1, 2)
                 )
-
-                return Group(main_panel, game_panel, Panel(status_text, padding=(0, 1)))
+                
+                progress_panel = Panel(
+                    progress_table,
+                    title="[bold]Progress",
+                    border_style="white",
+                    padding=(1, 2)
+                )
+                
+                graphs_panel = Panel(
+                    graph_table,
+                    border_style="white",
+                    padding=(1, 1)
+                )
+                
+                status_text = "[bold yellow]Press ESC to stop training and build engine[/]"
+                
+                return Group(
+                    stats_panel,
+                    winrate_panel,
+                    progress_panel,
+                    graphs_panel,
+                    Panel(status_text, padding=(0, 1), border_style="white")
+                )
             except Exception as e:
                 logger.log_exception(e, "make_dashboard")
-                # Return a simple fallback dashboard
                 return Group(
-                    Panel("Dashboard Error", title="Error"),
-                    Panel("Dashboard Error", title="Error"),
-                    Panel("[bold yellow]Press ESC to stop & build[/]", padding=(0, 1))
+                    Panel("Dashboard Error", border_style="white"),
+                    Panel("[bold yellow]ESC to stop & build[/]", padding=(0, 1), border_style="white")
                 )
 
         logger.log_info("Setting up move callback function")
@@ -312,13 +370,12 @@ def run_training(args):
                 game_state['sims'] = info.get('simulations', args.simulations)
             except Exception as e:
                 logger.log_exception(e, "on_move callback")
-                # Set default values on error
                 game_state['current_move'] = 0
                 game_state['last_moves'] = []
                 game_state['sims'] = args.simulations
 
         logger.log_info("Printing configuration")
-        console.print(f"[dim]Config: {args.simulations} sims, {args.games_per_epoch} games/epoch[/]")
+        logger.log_info(f"Config: {args.simulations} sims, {args.games_per_epoch} games/epoch")
         
         logger.log_info("Starting main training loop")
         try:
@@ -330,7 +387,6 @@ def run_training(args):
                             key = get_key()
                             if key and key == b'\x1b':
                                 logger.log_info("ESC key pressed, stopping training")
-                                console.print("\n[bold red]>>> ESC pressed! Stopping training...[/]")
                                 break
 
                         if epoch < args.epochs_before_opening:
@@ -361,18 +417,20 @@ def run_training(args):
                             try:
                                 if kb_hit() and get_key() == b'\x1b':
                                     logger.log_info("ESC key pressed during game generation, stopping training")
-                                    console.print("\n[bold red]>>> ESC pressed! Stopping training...[/]")
                                     raise KeyboardInterrupt()
 
                                 logger.log_debug(f"Starting game {g+1}/{args.games_per_epoch} in epoch {epoch}")
                                 states, policy_targets, value_targets, start_fen, game_result = play_game(
                                     network, mcts_config, training_mode,
-                                    max_think_time=1.0,
+                                    max_think_time=0.05,
                                     move_callback=on_move
                                 )
 
                                 logger.log_debug(f"Game {g+1} completed, adding to buffer")
                                 buffer.add_game(states, policy_targets, value_targets)
+                                
+                                moves_history.append(len(states))
+                                current_game_num = g + 1
 
                                 game_state['game_result'] = "W" if game_result == 1 else "L" if game_result == -1 else "D"
 
@@ -401,6 +459,8 @@ def run_training(args):
                         epoch_elapsed = time.time() - epoch_start
 
                         current_elo = best_elo + int((losses["combined_loss"] - 1.0) * -100)
+                        
+                        elo_history.append(current_elo)
 
                         game_state['epoch'] = epoch
                         game_state['policy_loss'] = losses['policy_loss']
@@ -453,22 +513,25 @@ def run_training(args):
         pass
     except Exception as e:
         logger.log_exception(e, "run_training function")
-        console.print(f"[red]Error: {e}[/]")
+        print(f"Error: {e}")
         raise  # Re-raise to let outer handlers deal with it
 
-    logger.log_info("Training loop completed, saving final results")
-    console.print("\n[bold yellow]+======================================================+[/]")
-    console.print(f"[bold]  Epochs:[/] {epoch}  |  [bold]Games:[/] {total_games}  |  [bold]Best Elo:[/] {best_elo}")
-    console.print("[bold yellow]+======================================================+[/]")
+    logger.log_info(f"Training loop completed: Epochs={epoch}, Games={total_games}, Best Elo={best_elo}")
 
     save_checkpoint_and_export(network, trainer)
     build_engine()
 
-    console.print("\n[bold green]Done! New engine is ready at build/ChessEngine.exe[/]")
-    logger.log_info("Training completed successfully")
+    logger.log_info("Training completed successfully, engine built at build/ChessEngine.exe")
 
 def main():
     try:
+        # Ensure required directories exist
+        os.makedirs(os.path.join(BASE_DIR, "checkpoints"), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, "exports"), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+        # Setup logging
+        setup_logging(level=logging.INFO)
+
         logger.log_info("Starting ChessAI Training Engine")
         parser = argparse.ArgumentParser(description="Chess AI Training")
         parser.add_argument("--epochs-before-opening", type=int, default=999999999)
