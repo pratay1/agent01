@@ -198,7 +198,6 @@ def run_training(args):
         best_elo = 1200
         elo_history = []
         moves_history = []
-        current_game_num = 0
 
         logger.log_info("Setting up MCTS configuration")
         mcts_config = {
@@ -252,7 +251,14 @@ def run_training(args):
         if use_parallel:
             logger.log_info(f"Parallel training enabled with {args.games_per_epoch} concurrent workers")
             import multiprocessing
-            # Use the module-level _play_game_worker defined above
+            # Capture network state dict on CPU to broadcast to workers
+            network_state = {k: v.cpu() for k, v in network.state_dict().items()}
+            with multiprocessing.Pool(
+                processes=min(args.games_per_epoch, multiprocessing.cpu_count()),
+                initializer=_init_worker,
+                initargs=(network_state,)
+            ) as pool:
+                results = pool.starmap(_play_game_worker, tasks)
         
         logger.log_info("Starting main training loop")
         try:
@@ -428,7 +434,7 @@ def main():
                             help="Run games in parallel using multiprocessing")
         args = parser.parse_args()
         
-        logger.log_info(f"Arguments parsed: epochs_before_opening={args.epochs_before_opening}, simulations={args.simulations}, games_per_epoch={args.games_per_epoch}, resume={args.resume}")
+        logger.log_info(f"Arguments parsed: simulations={args.simulations}, games_per_epoch={args.games_per_epoch}, resume={args.resume}, parallel={args.parallel}")
         
         run_training(args)
         logger.log_info("Training completed successfully")
