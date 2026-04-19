@@ -369,23 +369,48 @@ public partial class MainWindow : Window
     {
         if (_isBuildMode)
         {
-            ModeIndicator.Text = "BUILD";
-            ModeIndicator.Foreground = new SolidColorBrush(Color.FromRgb(79, 195, 247));
-            ModeButton.Content = "▶";
+            BuildButton.Background = new SolidColorBrush(Color.FromRgb(79, 195, 247));
+            BuildButton.Foreground = new SolidColorBrush(Color.FromRgb(17, 17, 17));
+            PlayButton.Background = new SolidColorBrush(Color.FromRgb(42, 42, 47));
+            PlayButton.Foreground = new SolidColorBrush(Color.FromRgb(85, 85, 85));
         }
         else
         {
-            ModeIndicator.Text = "PLAY";
-            ModeIndicator.Foreground = new SolidColorBrush(Color.FromRgb(129, 199, 132));
-            ModeButton.Content = "❚❚";
+            BuildButton.Background = new SolidColorBrush(Color.FromRgb(42, 42, 47));
+            BuildButton.Foreground = new SolidColorBrush(Color.FromRgb(85, 85, 85));
+            PlayButton.Background = new SolidColorBrush(Color.FromRgb(129, 199, 132));
+            PlayButton.Foreground = new SolidColorBrush(Color.FromRgb(17, 17, 17));
         }
         
-        PauseIndicator.Visibility = _isPaused ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        if (_isPaused)
+        {
+            PauseButton.Background = new SolidColorBrush(Color.FromRgb(229, 57, 53));
+            PauseButton.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            PauseButton.Content = "PAUSED";
+        }
+        else
+        {
+            PauseButton.Background = new SolidColorBrush(Color.FromRgb(42, 42, 47));
+            PauseButton.Foreground = new SolidColorBrush(Color.FromRgb(85, 85, 85));
+            PauseButton.Content = "PAUSE";
+        }
     }
 
-    private void ModeButton_Click(object sender, System.Windows.RoutedEventArgs e)
+    private void BuildButton_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        TogglePlayBuildMode();
+        _isBuildMode = true;
+        UpdateModeUI();
+    }
+
+    private void PlayButton_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        _isBuildMode = false;
+        UpdateModeUI();
+    }
+
+    private void PauseButton_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        TogglePause();
     }
     
     private void ClearWorld() => _world.Clear();

@@ -1,11 +1,24 @@
+using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Linq;
 using PhysicsSandbox.Math;
 using PhysicsSandbox.Physics;
 
 namespace PhysicsSandbox.Rendering;
+
+public class Particle
+{
+    public double X, Y;
+    public double VX, VY;
+    public double Life;
+    public double MaxLife;
+    public Color Color;
+    public double Size;
+}
 
 public class Renderer
 {
@@ -13,22 +26,16 @@ public class Renderer
     private readonly Dictionary<int, Ellipse> _bodyShapes = new();
     private readonly Dictionary<int, Line> _velocityLines = new();
     private readonly HashSet<UIElement> _debugShapes = new();
-
+    private readonly List<Particle> _particles = new();
+    private readonly List<UIElement> _particleShapes = new();
+    private readonly Random _rand = new Random();
     private const double VelocityScale = 0.1;
+    private double _particleTimer = 0;
 
     public Renderer(Canvas canvas)
     {
         _canvas = canvas;
-        _canvas.Background = new SolidColorBrush(Color.FromRgb(30, 30, 35));
-    }
-
-    public void ClearDebugShapes()
-    {
-        foreach (var shape in _debugShapes)
-        {
-            _canvas.Children.Remove(shape);
-        }
-        _debugShapes.Clear();
+        _canvas.Background = new SolidColorBrush(Color.FromRgb(20, 20, 25));
     }
 
     public void UpdateBodies(IEnumerable<RigidBody> bodies)
@@ -38,6 +45,8 @@ public class Renderer
         foreach (var body in bodies)
         {
             activeIds.Add(body.Id);
+            SpawnParticlesForBody(body);
+            UpdateBodyParticles(body);
 
             double screenX = body.Position.X;
             double screenY = body.Position.Y;
@@ -52,7 +61,7 @@ public class Renderer
                 {
                     Stroke = Brushes.Yellow,
                     StrokeThickness = 2,
-                    Opacity = 0.5
+                    Opacity = 0.3
                 };
                 _velocityLines[body.Id] = velocityLine;
                 _canvas.Children.Add(velocityLine);
@@ -73,12 +82,118 @@ public class Renderer
                 _canvas.Children.Remove(shape);
                 _bodyShapes.Remove(id);
             }
-
             if (_velocityLines.TryGetValue(id, out var line))
             {
                 _canvas.Children.Remove(line);
                 _velocityLines.Remove(id);
             }
+        }
+
+        UpdateParticles();
+    }
+
+    private void SpawnParticlesForBody(RigidBody body)
+    {
+        _particleTimer += 0.016;
+        if (_particleTimer < 0.05) return;
+        _particleTimer = 0;
+
+        int count = body.BodyType switch
+        {
+            BodyType.Explosive => 3,
+            BodyType.Lightning => 4,
+            BodyType.Plasma => 3,
+            BodyType.BlackHole => 2,
+            BodyType.Turbo => 2,
+            BodyType.GravityWell => 2,
+            BodyType.Repulsor => 2,
+            BodyType.Fire => 5,
+            BodyType.Freezer => 1,
+            BodyType.Spike => 2,
+            _ => 0
+        };
+
+        if (count == 0) return;
+
+        for (int i = 0; i < count; i++)
+        {
+            var angle = _rand.NextDouble() * System.Math.PI * 2;
+            var dist = body.Radius + _rand.NextDouble() * 10;
+            var speed = _rand.NextDouble() * 50 + 20;
+            
+            var particle = new Particle
+            {
+                X = body.Position.X + System.Math.Cos(angle) * dist,
+                Y = body.Position.Y + System.Math.Sin(angle) * dist,
+                VX = (float)(System.Math.Cos(angle + System.Math.PI) * speed),
+                VY = (float)(System.Math.Sin(angle + System.Math.PI) * speed),
+                Life = 1.0,
+                MaxLife = 0.5 + _rand.NextDouble() * 0.5,
+                Size = 2 + _rand.NextDouble() * 4,
+                Color = GetParticleColor(body.BodyType)
+            };
+            _particles.Add(particle);
+        }
+    }
+
+    private Color GetParticleColor(BodyType type) => type switch
+    {
+        BodyType.Normal => Color.FromRgb(79, 195, 247),
+        BodyType.Bouncy => Color.FromRgb(129, 199, 132),
+        BodyType.Heavy => Color.FromRgb(255, 183, 77),
+        BodyType.Explosive => Color.FromRgb(239, 83, 80),
+        BodyType.Repulsor => Color.FromRgb(186, 104, 200),
+        BodyType.GravityWell => Color.FromRgb(38, 198, 218),
+        BodyType.AntiGravity => Color.FromRgb(0, 188, 212),
+        BodyType.Freezer => Color.FromRgb(79, 195, 247),
+        BodyType.Turbo => Color.FromRgb(255, 238, 88),
+        BodyType.Phantom => Color.FromRgb(179, 136, 255),
+        BodyType.Spike => Color.FromRgb(244, 67, 54),
+        BodyType.Glue => Color.FromRgb(118, 255, 3),
+        BodyType.Plasma => Color.FromRgb(236, 64, 122),
+        BodyType.BlackHole => Color.FromRgb(171, 71, 188),
+        BodyType.Lightning => Color.FromRgb(255, 202, 40),
+        BodyType.Fire => Color.FromRgb(255, 87, 34),
+        _ => Color.FromRgb(255, 255, 255)
+    };
+
+    private void UpdateBodyParticles(RigidBody body)
+    {
+    }
+
+    private void UpdateParticles()
+    {
+        foreach (var shape in _particleShapes)
+        {
+            _canvas.Children.Remove(shape);
+        }
+        _particleShapes.Clear();
+
+        for (int i = _particles.Count - 1; i >= 0; i--)
+        {
+            var p = _particles[i];
+            p.X += p.VX * 0.016;
+            p.Y += p.VY * 0.016;
+            p.Life -= 0.016;
+
+            if (p.Life <= 0)
+            {
+                _particles.RemoveAt(i);
+                continue;
+            }
+
+            double opacity = p.Life / p.MaxLife;
+            var ellipse = new Ellipse
+            {
+                Width = p.Size * opacity,
+                Height = p.Size * opacity,
+                Fill = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), p.Color.R, p.Color.G, p.Color.B)),
+                Opacity = opacity * 0.8
+            };
+            Canvas.SetLeft(ellipse, p.X - p.Size / 2);
+            Canvas.SetTop(ellipse, p.Y - p.Size / 2);
+            _canvas.Children.Add(ellipse);
+            _particleShapes.Add(ellipse);
         }
     }
 
@@ -90,22 +205,35 @@ public class Renderer
         Brush stroke = Brushes.White;
         double strokeThickness = 1.5;
         
-        if (body.BodyType == BodyType.BlackHole)
+        switch (body.BodyType)
         {
-            stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9C27B0"));
-            strokeThickness = 3;
-        }
-        else if (body.BodyType == BodyType.Spike)
-        {
-            stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFCDD2"));
-            strokeThickness = 2;
+            case BodyType.BlackHole:
+                stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AB47BC"));
+                strokeThickness = 3;
+                break;
+            case BodyType.Spike:
+                stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFCDD2"));
+                strokeThickness = 2;
+                break;
+            case BodyType.Explosive:
+                stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF8A80"));
+                strokeThickness = 2;
+                break;
+            case BodyType.Lightning:
+                stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFD54F"));
+                strokeThickness = 2;
+                break;
+            case BodyType.Plasma:
+                stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F48FB1"));
+                strokeThickness = 2;
+                break;
         }
 
         return new Ellipse
         {
             Width = body.Radius * 2,
             Height = body.Radius * 2,
-            Fill = new SolidColorBrush(Color.FromArgb(220, color.R, color.G, color.B)),
+            Fill = new SolidColorBrush(Color.FromArgb(230, color.R, color.G, color.B)),
             Stroke = stroke,
             StrokeThickness = strokeThickness,
             Opacity = 0.95
@@ -115,14 +243,21 @@ public class Renderer
     private void UpdateVelocityLine(RigidBody body, double x, double y)
     {
         if (!_velocityLines.TryGetValue(body.Id, out var line)) return;
-
         line.X1 = x;
         line.Y1 = y;
         line.X2 = x + body.Velocity.X * VelocityScale;
         line.Y2 = y + body.Velocity.Y * VelocityScale;
-
         double speed = body.Velocity.Length;
-        line.Opacity = System.Math.Min(0.3 + speed * 0.001, 0.8);
+        line.Opacity = System.Math.Min(0.2 + speed * 0.0005, 0.5);
+    }
+
+    public void ClearDebugShapes()
+    {
+        foreach (var shape in _debugShapes)
+        {
+            _canvas.Children.Remove(shape);
+        }
+        _debugShapes.Clear();
     }
 
     public void DrawDebugPoint(Vector2 position, Color color, double size = 5)
@@ -143,10 +278,8 @@ public class Renderer
     {
         var line = new Line
         {
-            X1 = start.X,
-            Y1 = start.Y,
-            X2 = end.X,
-            Y2 = end.Y,
+            X1 = start.X, Y1 = start.Y,
+            X2 = end.X, Y2 = end.Y,
             Stroke = new SolidColorBrush(color),
             StrokeThickness = thickness
         };
@@ -190,19 +323,6 @@ public class Renderer
         _bodyShapes.Clear();
         _velocityLines.Clear();
         _debugShapes.Clear();
-    }
-
-    public void DrawUI(string text)
-    {
-        var textBlock = new TextBlock
-        {
-            Text = text,
-            Foreground = Brushes.White,
-            FontSize = 11,
-            FontFamily = new FontFamily("Consolas")
-        };
-        Canvas.SetLeft(textBlock, 10);
-        Canvas.SetTop(textBlock, 10);
-        _canvas.Children.Add(textBlock);
+        _particles.Clear();
     }
 }

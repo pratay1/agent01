@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PhysicsSandbox")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f1b79b9b403f7d37dee851814f5d83c4fb6d472")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a02b9d4bb7b74c90bd44c5fab77cc83923c52efb")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhysicsSandbox")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhysicsSandbox")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
