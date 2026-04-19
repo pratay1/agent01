@@ -5,6 +5,7 @@ import logging
 from typing import Dict, Optional, Tuple
 import chess
 from src.move_encoder import move_to_index, index_to_move, get_legal_move_indices
+from src.board_encoder import board_to_tensor
 
 logger = logging.getLogger("ChessAI.mcts")
 
@@ -61,21 +62,34 @@ class MCTS:
             root = MCTSNode()
 
             if is_root:
-                try:
-                    legal_moves = list(board.legal_moves)
-                    logger.debug(f"Found {len(legal_moves)} legal moves for root node")
-                    if legal_moves:
-                        noise = np.random.dirichlet([self.dirichlet_alpha] * len(legal_moves))
-                        for i, move in enumerate(legal_moves):
-                            idx = move_to_index(move, board)
-                            node = MCTSNode(prior=(1 - self.dirichlet_epsilon) * (1.0 / len(legal_moves)) +
-                                            self.dirichlet_epsilon * noise[i])
-                            root.children[idx] = node
+                legal_moves = list(board.legal_moves)
+                logger.debug(f"Found {len(legal_moves)} legal moves for root node")
+                if legal_moves:
+                    # Get network policy for root
+                    self.network.eval()
+                    with torch.no_grad():
+                        board_tensor = board_to_tensor(board)
+                        policy_logits, _ = self.network(board_tensor)
+                        policy_logits = policy_logits.squeeze(0).numpy()
+                    # Build policy over legal moves
+                    legal_indices = [move_to_index(m, board) for m in legal_moves]
+                    policy = np.zeros(4672)
+                    for idx in legal_indices:
+                        policy[idx] = math.exp(policy_logits[idx])
+                    policy_sum = policy.sum()
+                    if policy_sum > 0:
+                        policy /= policy_sum
                     else:
-                        logger.warning("No legal moves available for root node")
-                except Exception as e:
-                    logger.error(f"Error initializing root node: {e}", exc_info=True)
-                    # Continue with empty root node
+                        for idx in legal_indices:
+                            policy[idx] = 1.0 / len(legal_indices)
+                    # Add Dirichlet noise
+                    noise = np.random.dirichlet([self.dirichlet_alpha] * len(legal_moves))
+                    for i, idx in enumerate(legal_indices):
+                        prior = (1 - self.dirichlet_epsilon) * policy[idx] + self.dirichlet_epsilon * noise[i]
+                        root.children[idx] = MCTSNode(prior=prior)
+                    root.expanded = True
+                else:
+                    logger.warning("No legal moves available for root node")
 
             logger.debug(f"Running {self.num_simulations} simulations")
             for i in range(self.num_simulations):
@@ -83,7 +97,6 @@ class MCTS:
                     self._run_simulation(board, root)
                 except Exception as e:
                     logger.error(f"Error in simulation {i}: {e}", exc_info=True)
-                    # Continue with other simulations
 
             visit_counts = self._get_visit_counts(root)
             logger.debug(f"Visit counts calculated, shape: {visit_counts.shape}")
@@ -110,7 +123,6 @@ class MCTS:
                             best_idx = 0
                 except Exception as e:
                     logger.error(f"Error in temperature-based selection: {e}", exc_info=True)
-                    # Fallback to visit count based selection
                     if root.children:
                         best_idx = max(root.children.keys(), key=lambda k: root.children[k].visit_count)
                     else:
@@ -120,7 +132,6 @@ class MCTS:
             return visit_counts, int(best_idx)
         except Exception as e:
             logger.error(f"Fatal error in MCTS search: {e}", exc_info=True)
-            # Return zero visit counts and index 0 as fallback
             return np.zeros(4672), 0
 
     def _run_simulation(self, board: chess.Board, node: MCTSNode):
@@ -133,14 +144,8 @@ class MCTS:
                 try:
                     best_child = self._select_child(node)
                     if best_child is None:
-                        logger.debug("No valid child found during selection, trying random move")
-                        legal_moves = list(board.legal_moves)
-                        if legal_moves:
-                            move = np.random.choice(legal_moves)
-                            board.push(move)
-                            continue
-                        else:
-                            break
+                        logger.debug("No valid child found during selection, treating node as leaf")
+                        break
 
                     move = index_to_move(best_child[0], board)
                     if move is None:
@@ -161,6 +166,10 @@ class MCTS:
                 except Exception as e:
                     logger.error(f"Error during simulation traversal: {e}", exc_info=True)
                     break
+
+            # Ensure the leaf node (current node) is in the path before expansion
+            if node not in path:
+                path.append(node)
 
             if not board.is_game_over():
                 logger.debug("Expanding leaf node")
@@ -199,12 +208,13 @@ class MCTS:
                 logger.debug("Game over in simulation, calculating terminal value")
                 try:
                     outcome = board.outcome()
-                    if outcome is not None:
-                        value = -1.0 if outcome.winner == board.turn else (1.0 if outcome.winner else 0.0)
-                        logger.debug(f"Terminal value from game outcome: {value}")
-                    else:
+                    if outcome is None:
                         value = 0.0
-                        logger.debug("Game outcome is None, using value 0.0")
+                    elif outcome.winner == board.turn:
+                        value = 1.0
+                    else:
+                        value = -1.0
+                    logger.debug(f"Terminal value from game outcome: {value}")
                 except Exception as e:
                     logger.error(f"Error calculating terminal value: {e}", exc_info=True)
                     value = 0.0

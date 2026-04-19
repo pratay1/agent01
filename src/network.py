@@ -25,6 +25,7 @@ class AlphaZeroNetwork(nn.Module):
 
             self.policy_head = nn.Sequential(
                 nn.Conv2d(num_channels, 2, kernel_size=1),
+                nn.BatchNorm2d(2),
                 nn.ReLU(),
                 nn.Flatten(),
                 nn.Linear(2 * 8 * 8, 4672)
@@ -33,11 +34,10 @@ class AlphaZeroNetwork(nn.Module):
 
             self.value_head = nn.Sequential(
                 nn.Conv2d(num_channels, 1, kernel_size=1),
+                nn.BatchNorm2d(1),
                 nn.ReLU(),
                 nn.Flatten(),
-                nn.Linear(8 * 8, 16),
-                nn.ReLU(),
-                nn.Linear(16, 1),
+                nn.Linear(8 * 8, 1),
                 nn.Tanh()
             )
             logger.log_debug("Created value head")
@@ -75,7 +75,9 @@ class ResidualBlock(nn.Module):
             logger.log_debug(f"Initializing ResidualBlock with {channels} channels")
             super().__init__()
             self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+            self.bn1 = nn.BatchNorm2d(channels)
             self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+            self.bn2 = nn.BatchNorm2d(channels)
             logger.log_debug("ResidualBlock initialized successfully")
         except Exception as e:
             logger.log_exception(e, "ResidualBlock.__init__")
@@ -85,8 +87,8 @@ class ResidualBlock(nn.Module):
         try:
             logger.log_debug(f"ResidualBlock forward with input shape: {x.shape}")
             residual = x
-            x = F.relu(self.conv1(x))
-            x = self.conv2(x)
+            x = F.relu(self.bn1(self.conv1(x)))
+            x = self.bn2(self.conv2(x))
             result = F.relu(x + residual)
             logger.log_debug(f"ResidualBlock output shape: {result.shape}")
             return result
@@ -96,7 +98,7 @@ class ResidualBlock(nn.Module):
             return x
 
 
-def create_network(num_res_blocks=3, num_channels=64):
+def create_network(num_res_blocks=10, num_channels=256):
     try:
         logger.log_info(f"Creating network with {num_res_blocks} residual blocks and {num_channels} channels")
         network = AlphaZeroNetwork(num_res_blocks, num_channels)

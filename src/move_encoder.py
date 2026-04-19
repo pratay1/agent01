@@ -127,10 +127,12 @@ def index_to_move(index: int, board: chess.Board) -> chess.Move:
             promo = (move_type - 64) // 3  # 0=KNIGHT,1=BISHOP,2=ROOK
             shift = (move_type - 64) % 3   # 0:left(-1),1:straight(0),2:right(+1)
             # Determine pawn push direction based on from_row
-            if from_row == 1:  # white pawn on 7th rank -> moves upward (decrease row)
-                delta_row = -1
-            elif from_row == 6:  # black pawn on 2nd rank -> moves downward
+            # White pawns promote from row 6 (7th rank), moving upward (+row)
+            # Black pawns promote from row 1 (2nd rank), moving downward (-row)
+            if from_row == 6:  # white pawn on 7th rank
                 delta_row = 1
+            elif from_row == 1:  # black pawn on 2nd rank
+                delta_row = -1
             else:
                 logger.warning(f"Underpromotion from invalid row {from_row}")
                 return None

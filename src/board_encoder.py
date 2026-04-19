@@ -32,8 +32,8 @@ def board_to_tensor(board: chess.Board) -> torch.Tensor:
                 logger.log_exception(e, f"processing piece at square {square}")
                 # Continue with other pieces
 
-        planes[12, :, :] = 1.0 if board.turn == chess.WHITE else 0.0
-        logger.log_debug(f"Set turn plane (12) to: {1.0 if board.turn == chess.WHITE else 0.0}")
+        planes[12, :, :] = 1.0
+        logger.log_debug(f"Set turn plane (12) to: 1.0 (always from current player perspective)")
 
         try:
             if board_for_perspective.has_kingside_castling_rights(chess.WHITE):
@@ -52,9 +52,9 @@ def board_to_tensor(board: chess.Board) -> torch.Tensor:
             logger.log_exception(e, "setting castling rights")
 
         try:
-            if board.ep_square is not None:
-                row = 7 - (board.ep_square // 8)
-                col = board.ep_square % 8
+            if board_for_perspective.ep_square is not None:
+                row = 7 - (board_for_perspective.ep_square // 8)
+                col = board_for_perspective.ep_square % 8
                 planes[17, row, col] = 1.0
                 logger.log_debug(f"Set en passant square at ({row},{col})")
         except Exception as e:

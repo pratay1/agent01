@@ -39,8 +39,8 @@ class ReplayBuffer:
                 if len(self.buffer) == 0:
                     logger.log_warning("Replay buffer is empty, returning None")
                     return None, None, None
-                logger.log_debug(f"Buffer has {len(self.buffer)} samples (less than batch_size {self.batch_size}), using all available")
-                indices = np.random.choice(len(self.buffer), len(self.buffer), replace=False)
+                logger.log_debug(f"Buffer has {len(self.buffer)} samples (less than batch_size {self.batch_size}), sampling with replacement")
+                indices = np.random.choice(len(self.buffer), self.batch_size, replace=True)
             else:
                 logger.log_debug(f"Sampling {self.batch_size} samples from buffer")
                 indices = np.random.choice(len(self.buffer), self.batch_size, replace=False)

@@ -8,8 +8,8 @@ logger = get_logger()
 
 
 class Trainer:
-    def __init__(self, network: nn.Module, buffer, 
-                 learning_rate: float = 0.002, weight_decay: float = 1e-4,
+    def __init__(self, network: nn.Module, buffer,
+                 learning_rate: float = 0.001, weight_decay: float = 1e-4,
                  batch_size: int = 2048):
         try:
             logger.log_info(f"Initializing Trainer with lr={learning_rate}, weight_decay={weight_decay}, batch_size={batch_size}")

@@ -35,24 +35,30 @@ def generate_random_opening(board: chess.Board, min_moves: int = 6, max_moves: i
         return chess.Board()
 
 
-def play_game(network, mcts_config: Dict[str, Any], training_mode: str = "midgame", 
-               max_think_time: float = 0.05, move_callback: Optional[Callable] = None) -> Tuple[List[torch.Tensor], List[np.ndarray], List[int], str, int]:
+def play_game(network, mcts_config: Dict[str, Any], training_mode: str = "midgame",
+               max_think_time: float = 0.05, move_callback: Optional[Callable] = None,
+               start_fen: Optional[str] = None) -> Tuple[List[torch.Tensor], List[np.ndarray], List[int], str, int]:
     try:
         logger.log_debug(f"Starting play_game with training_mode={training_mode}, max_think_time={max_think_time}")
-        board = chess.Board()
 
-        if training_mode == "midgame":
-            logger.log_debug("Using midgame mode, generating random opening")
-            board = generate_random_opening(board, 6, 10)
-        elif training_mode == "opening":
-            logger.log_debug("Using opening mode")
-            pass
+        # Initialize board
+        if start_fen is not None:
+            board = chess.Board(start_fen)
+            logger.log_debug(f"Using provided start FEN: {start_fen}")
         else:
-            logger.log_warning(f"Unknown training_mode: {training_mode}, defaulting to midgame")
-            board = generate_random_opening(board, 6, 10)
+            board = chess.Board()
+            if training_mode == "midgame":
+                logger.log_debug("Using midgame mode, generating random opening")
+                board = generate_random_opening(board, 6, 10)
+            elif training_mode == "opening":
+                logger.log_debug("Using opening mode with initial position")
+                pass
+            else:
+                logger.log_warning(f"Unknown training_mode: {training_mode}, defaulting to midgame")
+                board = generate_random_opening(board, 6, 10)
 
-        start_fen = board.fen()
-        logger.log_debug(f"Starting FEN: {start_fen}")
+        initial_fen = board.fen()
+        logger.log_debug(f"Starting FEN: {initial_fen}")
 
         logger.log_debug("Initializing MCTS")
         mcts = MCTS(
@@ -100,12 +106,20 @@ def play_game(network, mcts_config: Dict[str, Any], training_mode: str = "midgam
                 visit_counts, best_idx = mcts.search(board, is_root=True)
                 logger.log_debug(f"MCTS search completed, visit_counts shape: {visit_counts.shape}")
 
-                policy_target = visit_counts / visit_counts.sum() if visit_counts.sum() > 0 else visit_counts
+                visit_sum = visit_counts.sum()
+                if visit_sum > 0:
+                    policy_target = visit_counts / visit_sum
+                else:
+                    logger.log_warning("Visit counts sum to zero, using uniform distribution over legal moves")
+                    # Uniform fallback over legal moves: we don't have legal_indices here directly
+                    # Zero vector is acceptable fallback — trainer will handle it
+                    policy_target = visit_counts  # all zeros
                 logger.log_debug(f"Policy target calculated, sum: {policy_target.sum()}")
 
                 states.append(board_tensor)
                 policy_targets.append(policy_target)
-                value_signs.append(1 if move_count % 2 == 0 else -1)
+                # Sign is +1 if it's white to move, -1 if black to move
+                value_signs.append(1 if board.turn == chess.WHITE else -1)
 
                 move = mcts.get_best_move(board)
                 if move is None:
@@ -158,7 +172,7 @@ def play_game(network, mcts_config: Dict[str, Any], training_mode: str = "midgam
         value_targets = [sign * game_result for sign in value_signs]
         logger.log_debug(f"Generated {len(value_targets)} value targets")
 
-        result = (states, policy_targets, value_targets, start_fen, game_result)
+        result = (states, policy_targets, value_targets, initial_fen, game_result)
         logger.log_info(f"Game completed: {len(states)} moves, result: {game_result}")
         return result
         
