@@ -53,12 +53,13 @@ public partial class MainWindow : Window
 
         SelectBodyType(BodyType.Normal);
         SetupInput();
+        UpdateModeUI();
         StartGame();
     }
 
     private void SetupInput()
     {
-        _inputHandler.RegisterKeyDown(Key.Space, ToggleMode);
+        _inputHandler.RegisterKeyDown(Key.Space, TogglePause);
         _inputHandler.RegisterKeyDown(Key.C, ClearWorld);
         _inputHandler.RegisterKeyDown(Key.G, ToggleGravity);
         _inputHandler.RegisterKeyDown(Key.W, ToggleWind);
@@ -147,23 +148,7 @@ public partial class MainWindow : Window
 
     private void UpdateStatus()
     {
-        string status = $"Bodies: {_world.Bodies.Count} | FPS: {_currentFps:F0}";
-        
-        if (_isBuildMode) 
-            status += " | BUILD MODE";
-        else
-            status += " | PLAY MODE";
-
-        if (_isPaused) status += " | PAUSED";
-        
-        Vector2 gravity = _world.Gravity;
-        if (gravity.Y > 0) status += " | ↓ Gravity";
-        else if (gravity.Y < 0) status += " | ↑ Gravity";
-
-        if (_world.ForceManager.Wind.IsActive) status += " | Wind: ON";
-        status += $" | Time: {_world.TimeScale:F1}x";
-
-        StatusText.Text = status;
+        StatusText.Text = $"{_world.Bodies.Count} bodies";
     }
 
     #region Toolbar
@@ -367,15 +352,40 @@ public partial class MainWindow : Window
         _world.ForceManager.Explosion.Trigger(new Vector2(position.X, position.Y));
     }
 
-    private void ToggleMode()
+    private void TogglePlayBuildMode()
     {
         _isBuildMode = !_isBuildMode;
+        UpdateModeUI();
     }
 
     private void TogglePause()
     {
         _isPaused = !_isPaused;
         _world.IsPaused = _isPaused;
+        UpdateModeUI();
+    }
+
+    private void UpdateModeUI()
+    {
+        if (_isBuildMode)
+        {
+            ModeIndicator.Text = "BUILD";
+            ModeIndicator.Foreground = new SolidColorBrush(Color.FromRgb(79, 195, 247));
+            ModeButton.Content = "▶";
+        }
+        else
+        {
+            ModeIndicator.Text = "PLAY";
+            ModeIndicator.Foreground = new SolidColorBrush(Color.FromRgb(129, 199, 132));
+            ModeButton.Content = "❚❚";
+        }
+        
+        PauseIndicator.Visibility = _isPaused ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+    }
+
+    private void ModeButton_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        TogglePlayBuildMode();
     }
     
     private void ClearWorld() => _world.Clear();
@@ -398,7 +408,7 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Space)
         {
-            ToggleMode();
+            TogglePause();
             return;
         }
         _inputHandler.HandleKeyDown(e.Key);
