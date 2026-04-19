@@ -100,17 +100,23 @@ public class Renderer
 
         int count = body.BodyType switch
         {
-            BodyType.Explosive => 3,
-            BodyType.Lightning => 4,
-            BodyType.Plasma => 3,
-            BodyType.BlackHole => 2,
-            BodyType.Turbo => 2,
-            BodyType.GravityWell => 2,
-            BodyType.Repulsor => 2,
-            BodyType.Fire => 5,
-            BodyType.Freezer => 1,
-            BodyType.Spike => 2,
-            _ => 0
+            BodyType.Normal => 2,
+            BodyType.Bouncy => 2,
+            BodyType.Heavy => 1,
+            BodyType.Explosive => 4,
+            BodyType.Repulsor => 3,
+            BodyType.GravityWell => 3,
+            BodyType.AntiGravity => 3,
+            BodyType.Freezer => 2,
+            BodyType.Turbo => 3,
+            BodyType.Phantom => 2,
+            BodyType.Spike => 3,
+            BodyType.Glue => 2,
+            BodyType.Plasma => 4,
+            BodyType.BlackHole => 4,
+            BodyType.Lightning => 5,
+            BodyType.Fire => 6,
+            _ => 1
         };
 
         if (count == 0) return;

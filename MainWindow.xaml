@@ -29,19 +29,11 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="2D Physics" Foreground="#444444" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     
-                    <!-- Mode Buttons -->
+                    <!-- Single Mode Button + Pause -->
                     <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
-                        <Button x:Name="BuildButton" Content="BUILD" Click="BuildButton_Click"
-                                Width="60" Height="26" Margin="0,0,6,0"
-                                Background="#4FC3F7" Foreground="#111111" FontWeight="Bold" FontSize="10"
-                                BorderThickness="0"/>
-                        <Button x:Name="PlayButton" Content="PLAY" Click="PlayButton_Click"
-                                Width="60" Height="26" Margin="0,0,6,0"
-                                Background="#2A2A2F" Foreground="#555555" FontWeight="Bold" FontSize="10"
-                                BorderThickness="0"/>
                         <Button x:Name="PauseButton" Content="PAUSE" Click="PauseButton_Click"
-                                Width="60" Height="26"
-                                Background="#2A2A2F" Foreground="#555555" FontWeight="Bold" FontSize="10"
+                                Width="70" Height="26"
+                                Background="#333333" Foreground="#888888" FontWeight="Bold" FontSize="10"
                                 BorderThickness="0"/>
                     </StackPanel>
                 </StackPanel>
@@ -115,7 +107,7 @@
         <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#101010" Padding="16,8">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Foreground="#2A2A2A" FontSize="10">
-                    <Run Text="[C]"/><Run Text=" clear"/><Run Text="  [G]"/><Run Text=" gravity"/><Run Text="  [RMB]"/><Run Text=" explode"/>
+                    <Run Text="[SPACE]"/><Run Text=" pause"/><Run Text="  [C]"/><Run Text=" clear"/><Run Text="  [G]"/><Run Text=" gravity"/><Run Text="  [RMB]"/><Run Text=" explode"/>
                 </TextBlock>
             </StackPanel>
         </Border>
