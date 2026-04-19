@@ -24,6 +24,9 @@ public partial class MainWindow : Window
     private int _fpsCounter;
     private double _lastFpsTime;
     private double _currentFps;
+    private double _tickRate = 1000;
+    private int _tickCounter;
+    private double _lastTickTime;
     
     private BodyType _selectedBodyType = BodyType.Normal;
     private RigidBody? _grabbedBody;
@@ -32,7 +35,19 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        InitializeComponent();
+        DebugLog.Init();
+        DebugLog.Log("MainWindow initializing...");
+        
+        try
+        {
+            InitializeComponent();
+            DebugLog.Log("InitializeComponent completed");
+        }
+        catch (Exception ex)
+        {
+            DebugLog.LogError("InitializeComponent failed", ex);
+            throw;
+        }
 
         _canvasWidth = 1140;
         _canvasHeight = 600;
@@ -87,16 +102,23 @@ public partial class MainWindow : Window
 
     private void Timer_Tick(object? sender, EventArgs e)
     {
-        double deltaTime = 1.0 / 60.0;
-        _gameLoop.Tick(deltaTime);
-        CalculateFps(deltaTime);
-        UpdateStatus();
-        
-        if (_grabbedBody != null)
+        try
         {
-            var mousePos = _inputHandler.GetMousePosition();
-            _grabbedBody.Position = new Vector2((float)(mousePos.X - _grabOffset.X), (float)(mousePos.Y - _grabOffset.Y));
-            _grabbedBody.Velocity = Vector2.Zero;
+            double deltaTime = 1.0 / 60.0;
+            _gameLoop.Tick(deltaTime);
+            CalculateFps(deltaTime);
+            UpdateStatus();
+            
+            if (_grabbedBody != null)
+            {
+                var mousePos = _inputHandler.GetMousePosition();
+                _grabbedBody.Position = new Vector2((float)(mousePos.X - _grabOffset.X), (float)(mousePos.Y - _grabOffset.Y));
+                _grabbedBody.Velocity = Vector2.Zero;
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLog.LogError("Timer_Tick failed", ex);
         }
     }
 
@@ -104,6 +126,16 @@ public partial class MainWindow : Window
     {
         _lastFpsTime += deltaTime;
         _fpsCounter++;
+        
+        _tickCounter++;
+        _lastTickTime += deltaTime;
+        if (_lastTickTime >= 1.0)
+        {
+            _tickRate = _tickCounter;
+            _tickCounter = 0;
+            _lastTickTime = 0;
+        }
+
         if (_lastFpsTime >= 1.0)
         {
             _currentFps = _fpsCounter / _lastFpsTime;
@@ -114,8 +146,15 @@ public partial class MainWindow : Window
 
     private void OnUpdate(double dt) 
     {
-        if (!_isPaused)
-            _world.Step(dt);
+        try
+        {
+            if (!_isPaused)
+                _world.Step(dt);
+        }
+        catch (Exception ex)
+        {
+            DebugLog.LogError("OnUpdate physics failed", ex);
+        }
     }
 
     private void OnRender(double dt)
@@ -125,7 +164,9 @@ public partial class MainWindow : Window
 
     private void UpdateStatus()
     {
-        StatusText.Text = $"{_world.Bodies.Count}";
+        string status = $"{_world.Bodies.Count} bodies | Tick: {_tickRate}/1000";
+        if (_isPaused) status += " | PAUSED";
+        StatusText.Text = status;
     }
 
     private void SelectBodyType(BodyType type) => _selectedBodyType = type;

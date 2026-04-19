@@ -7,6 +7,7 @@ using System.Windows.Shapes;
 using System.Linq;
 using PhysicsSandbox.Math;
 using PhysicsSandbox.Physics;
+using PhysicsSandbox;
 
 namespace PhysicsSandbox.Rendering;
 
@@ -100,23 +101,23 @@ public class Renderer
 
         int count = body.BodyType switch
         {
-            BodyType.Normal => 2,
-            BodyType.Bouncy => 2,
-            BodyType.Heavy => 1,
-            BodyType.Explosive => 4,
-            BodyType.Repulsor => 3,
-            BodyType.GravityWell => 3,
-            BodyType.AntiGravity => 3,
-            BodyType.Freezer => 2,
-            BodyType.Turbo => 3,
-            BodyType.Phantom => 2,
-            BodyType.Spike => 3,
-            BodyType.Glue => 2,
-            BodyType.Plasma => 4,
-            BodyType.BlackHole => 4,
-            BodyType.Lightning => 5,
-            BodyType.Fire => 6,
-            _ => 1
+            BodyType.Explosive => 3,
+            BodyType.Lightning => 3,
+            BodyType.Plasma => 3,
+            BodyType.BlackHole => 2,
+            BodyType.Turbo => 2,
+            BodyType.GravityWell => 2,
+            BodyType.Repulsor => 2,
+            BodyType.Fire => 3,
+            BodyType.Spike => 1,
+            BodyType.AntiGravity => 1,
+            BodyType.Bouncy => 1,
+            BodyType.Glue => 1,
+            BodyType.Freezer => 1,
+            BodyType.Phantom => 1,
+            BodyType.Heavy => 0,
+            BodyType.Normal => 0,
+            _ => 0
         };
 
         if (count == 0) return;
