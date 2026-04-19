@@ -133,10 +133,23 @@ class MCTS:
                 try:
                     best_child = self._select_child(node)
                     if best_child is None:
-                        logger.warning("No valid child found during selection")
-                        break
+                        logger.debug("No valid child found during selection, trying random move")
+                        legal_moves = list(board.legal_moves)
+                        if legal_moves:
+                            move = np.random.choice(legal_moves)
+                            board.push(move)
+                            continue
+                        else:
+                            break
 
                     move = index_to_move(best_child[0], board)
+                    if move is None:
+                        logger.debug(f"index_to_move returned None for index {best_child[0]}, trying random move")
+                        legal_moves = list(board.legal_moves)
+                        if legal_moves:
+                            move = np.random.choice(legal_moves)
+                        else:
+                            break
                     if move is None:
                         logger.warning("Failed to get move from index")
                         break
@@ -222,10 +235,11 @@ class MCTS:
                         best_value = value
                         best = (idx, child)
                 except Exception as e:
-                    logger.error(f"Error getting value for child {idx}: {e}", exc_info=True)
-                    # Skip this child
-            if best is None:
-                logger.warning("No valid child found after evaluation")
+                    logger.debug(f"Error getting value for child {idx}: {e}")
+            if best is None and node.children:
+                logger.debug("No valid child found after evaluation, selecting random")
+                idx = np.random.choice(list(node.children.keys()))
+                best = (idx, node.children[idx])
             return best
         except Exception as e:
             logger.error(f"Error in _select_child: {e}", exc_info=True)
@@ -248,7 +262,13 @@ class MCTS:
             _, best_idx = self.search(board, is_root=True)
             move = index_to_move(best_idx, board)
             if move is None:
-                logger.warning(f"index_to_move returned None for index {best_idx}")
+                logger.debug(f"index_to_move returned None for index {best_idx}, trying random move")
+                legal_moves = list(board.legal_moves)
+                if legal_moves:
+                    move = np.random.choice(legal_moves)
+                    logger.debug(f"Selected random move: {move.uci()}")
+                else:
+                    logger.warning("No legal moves available")
             else:
                 logger.debug(f"Best move: {move.uci()}")
             return move

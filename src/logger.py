@@ -15,7 +15,7 @@ class TrainingLogger:
         
         # Setup main application logger
         self.main_logger = logging.getLogger('chess_ai_main')
-        self.main_logger.setLevel(logging.DEBUG)
+        self.main_logger.setLevel(logging.INFO)
         
         # Setup error logger
         self.error_logger = logging.getLogger('chess_ai_error')

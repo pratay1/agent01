@@ -1,2 +1,6 @@
 C:\Users\prata\agent01\build\ChessEngine.pdb
+C:\Users\prata\agent01\build\onnxruntime.dll
+C:\Users\prata\agent01\build\onnxruntime_providers_shared.dll
+C:\Users\prata\agent01\build\onnxruntime.lib
+C:\Users\prata\agent01\build\onnxruntime_providers_shared.lib
 C:\Users\prata\agent01\build\ChessEngine.exe
