@@ -26,218 +26,133 @@
         
         <!-- Title Bar -->
         <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#252530" Padding="10,5">
-            <TextBlock Text="2D Physics Sandbox" 
-                      Foreground="#AAAAAA" FontSize="14" FontWeight="Bold"
-                      HorizontalAlignment="Left"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="2D Physics Sandbox" 
+                          Foreground="#AAAAAA" FontSize="14" FontWeight="Bold"
+                          VerticalAlignment="Center"/>
+                <TextBlock x:Name="ModeIndicator" Text="[BUILD MODE]"
+                          Foreground="#FF6B6B" FontSize="12" FontWeight="Bold" Margin="20,0,0,0"
+                          VerticalAlignment="Center"/>
+            </StackPanel>
         </Border>
         
         <!-- Game Canvas -->
         <Canvas x:Name="GameCanvas" Grid.Row="1" Grid.Column="0" ClipToBounds="True"/>
         
-        <!-- Body Selection Toolbar - Fixed, No Collapse -->
+        <!-- Body Selection Toolbar -->
         <Border x:Name="BodyToolbar" 
                 Grid.Row="1" Grid.Column="1" 
                 Background="#252530" 
                 Width="260"
                 HorizontalAlignment="Right">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="10">
                     <TextBlock Text="Select Body Type:" 
                               Foreground="#AAAAAA" FontSize="12" FontWeight="Bold"
                               Margin="0,0,0,10"/>
                     
-                    <!-- Normal -->
-                    <Border x:Name="NormalBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="NormalBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="NormalBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="NormalBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#4FC3F7" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Normal" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Standard physics body" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Normal" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Standard physics" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Bouncy -->
-                    <Border x:Name="BouncyBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="BouncyBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="BouncyBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="BouncyBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#81C784" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Bouncy" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Super bouncy - bounces like crazy!" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Bouncy" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Super bouncy!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Heavy -->
-                    <Border x:Name="HeavyBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="HeavyBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="HeavyBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="HeavyBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#FFB74D" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Heavy" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Massive weight - pushes through" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Heavy" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Massive weight" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Explosive -->
-                    <Border x:Name="ExplosiveBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="ExplosiveBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="ExplosiveBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="ExplosiveBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#E57373" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Explosive" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="BOOM! Explodes on contact" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#E53935" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Explosive" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="BOOM!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Repulsor -->
-                    <Border x:Name="RepulsorBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="RepulsorBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="RepulsorBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="RepulsorBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#BA68C8" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Repulsor" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Pushes away everything nearby" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Repulsor" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Pushes away" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- GravityWell -->
-                    <Border x:Name="GravityWellBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="GravityWellBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="GravityWellBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="GravityWellBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#4DB6AC" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Gravity Well" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Attracts objects like a black hole" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#00E5FF" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Gravity Well" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Attracts objects" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- AntiGravity -->
-                    <Border x:Name="AntiGravityBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="AntiGravityBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="AntiGravityBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="AntiGravityBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#4DD0E1" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Anti-Gravity" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Floats upward - defies gravity!" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#00BCD4" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Anti-Gravity" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Floats up!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Freezer -->
-                    <Border x:Name="FreezerBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="FreezerBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="FreezerBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="FreezerBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#81D4FA" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Freezer" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Slows down anything it touches" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Freezer" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Slows things" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Turbo -->
-                    <Border x:Name="TurboBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="TurboBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="TurboBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="TurboBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#FFEB3B" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Turbo" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Accelerates - goes supersonic!" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Turbo" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Goes supersonic!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Phantom -->
-                    <Border x:Name="PhantomBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="PhantomBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="PhantomBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="PhantomBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#B39DDB" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Phantom" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Passes through but affects objects" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#B388FF" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Phantom" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Passes through" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Spike -->
-                    <Border x:Name="SpikeBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="SpikeBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="SpikeBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="SpikeBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#F44336" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Spike" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Bounces off violently" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Spike" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Violent bounce!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Glue -->
-                    <Border x:Name="GlueBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="GlueBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="GlueBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="GlueBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#AED581" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Glue" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Sticks to anything it touches" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#76FF03" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Glue" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Sticks to walls" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Plasma -->
-                    <Border x:Name="PlasmaBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="PlasmaBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="PlasmaBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="PlasmaBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="18" Height="18" Fill="#E91E63" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Plasma" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Electric - chains force to nearby" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <StackPanel><TextBlock Text="Plasma" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Electric zigzag!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- BlackHole -->
-                    <Border x:Name="BlackHoleBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="BlackHoleBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="BlackHoleBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="BlackHoleBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#212121" Stroke="#9C27B0" StrokeThickness="2" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Black Hole" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Sucks in everything &amp; grows!" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#1A1A1A" Stroke="#9C27B0" StrokeThickness="2" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Black Hole" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Sucks &amp; grows!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Lightning -->
-                    <Border x:Name="LightningBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6"
-                            MouseEnter="BodyButton_MouseEnter" MouseLeave="BodyButton_MouseLeave"
-                            MouseLeftButtonDown="LightningBodyButton_MouseLeftButtonDown">
+                    <Border x:Name="LightningBodyButton" Background="#3A3A45" CornerRadius="4" Padding="8" Margin="0,0,0,6" MouseLeftButtonDown="LightningBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="18" Height="18" Fill="#FF9800" Margin="0,0,10,0"/>
-                            <StackPanel>
-                                <TextBlock Text="Lightning" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Zaps nearby objects!" Foreground="#888888" FontSize="9"/>
-                            </StackPanel>
+                            <Ellipse Width="18" Height="18" Fill="#FFD600" Margin="0,0,10,0"/>
+                            <StackPanel><TextBlock Text="Lightning" Foreground="#FFFFFF" FontSize="11" FontWeight="Bold"/><TextBlock Text="Zaps nearby!" Foreground="#888888" FontSize="9"/></StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -247,7 +162,7 @@
         <!-- Status Bar -->
         <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#252530" Padding="10,5">
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="StatusText" Text="Bodies: 0 | FPS: 60 | Press Space to Pause" 
+                <TextBlock x:Name="StatusText" Text="Bodies: 0 | FPS: 60" 
                             Foreground="#888888" FontSize="11" FontFamily="Consolas"/>
             </StackPanel>
         </Border>
@@ -256,7 +171,7 @@
         <Border Grid.Row="3" Grid.ColumnSpan="2" Background="#1A1A1F" Padding="10,6">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Foreground="#555560" FontSize="10" FontFamily="Consolas">
-                    <Run Text="[SPACE] Pause"/><Run Text="  |  "/><Run Text="[C] Clear"/><Run Text="  |  "/><Run Text="[G] Gravity"/><Run Text="  |  "/><Run Text="[W] Wind"/><Run Text="  |  "/><Run Text="[+/-] Speed"/><Run Text="  |  "/><Run Text="[LMB] Spawn/Fling"/><Run Text="  |  "/><Run Text="[RMB] Explode"/>
+                    <Run Text="[SPACE] Play/Build"/><Run Text="  |  "/><Run Text="[C] Clear"/><Run Text="  |  "/><Run Text="[G] Gravity"/><Run Text="  |  "/><Run Text="[W] Wind"/><Run Text="  |  "/><Run Text="[+/-] Speed"/><Run Text="  |  "/><Run Text="[LMB] Spawn/Grab"/><Run Text="  |  "/><Run Text="[RMB] Explode"/>
                 </TextBlock>
             </StackPanel>
         </Border>

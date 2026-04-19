@@ -121,4 +121,9 @@ public class InputHandler
             OnMouseLeftHold?.Invoke(_mousePosition);
         }
     }
+
+    public Point GetMousePosition()
+    {
+        return _mousePosition;
+    }
 }

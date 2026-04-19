@@ -1,3 +1,4 @@
+using System.Windows.Media;
 using PhysicsSandbox.Math;
 using PhysicsSandbox.Physics;
 
@@ -8,15 +9,15 @@ public class GravityWellBehavior : BodyBehavior
     public override BodyType Type => BodyType.GravityWell;
     public override string Name => "Gravity Well";
     public override string Description => "Attracts nearby objects like a black hole";
-    public override string ColorHex => "#4DB6AC";
-    public override double DefaultRadius => 14;
-    public override double DefaultMass => 5;
-    public override double DefaultRestitution => 0.5;
+    public override string ColorHex => "#00E5FF";
+    public override double DefaultRadius => 18;
+    public override double DefaultMass => 8;
+    public override double DefaultRestitution => 0.3;
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        const float attractRadius = 200f;
-        const float attractStrength = 8000f;
+        const float attractRadius = 250f;
+        const float attractStrength = 15000f;
 
         foreach (var other in world.Bodies)
         {
@@ -27,7 +28,7 @@ public class GravityWellBehavior : BodyBehavior
 
             if (distance > 0 && distance < attractRadius)
             {
-                var forceMagnitude = attractStrength * (1 - distance / attractRadius) / (distance * distance);
+                var forceMagnitude = attractStrength * (1 - distance / attractRadius);
                 var force = direction.Normalized * forceMagnitude;
                 other.ApplyForce(force);
             }

@@ -8,15 +8,15 @@ public class BlackHoleBehavior : BodyBehavior
     public override BodyType Type => BodyType.BlackHole;
     public override string Name => "Black Hole";
     public override string Description => "Sucks in everything & grows!";
-    public override string ColorHex => "#0D0D0D";
+    public override string ColorHex => "#1A1A1A";
     public override double DefaultRadius => 15;
-    public override double DefaultMass => 10;
+    public override double DefaultMass => 15;
     public override double DefaultRestitution => 0;
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        const float suckRadius = 300f;
-        const float suckStrength = 12000f;
+        const float suckRadius = 350f;
+        const float suckStrength = 20000f;
 
         foreach (var other in world.Bodies)
         {
@@ -27,17 +27,21 @@ public class BlackHoleBehavior : BodyBehavior
 
             if (distance > 0 && distance < suckRadius)
             {
-                var forceMagnitude = suckStrength * (1 - distance / suckRadius) / (distance * distance);
+                var forceMagnitude = suckStrength * (1 - distance / suckRadius) / (distance * 0.5f + 1);
                 var force = direction.Normalized * forceMagnitude;
                 other.ApplyForce(force);
 
-                if (distance < body.Radius + other.Radius + 20)
+                if (distance < body.Radius + other.Radius + 30)
                 {
-                    other.Radius = System.Math.Max(5, other.Radius * 0.999);
+                    other.Radius = System.Math.Max(3, other.Radius * 0.998);
+                    if (other.Radius <= 3)
+                    {
+                        world.RemoveBody(other);
+                    }
                 }
             }
         }
 
-        body.Radius = System.Math.Min(100, body.Radius * 1.001);
+        body.Radius = System.Math.Min(80, body.Radius * 1.002);
     }
 }

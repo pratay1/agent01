@@ -8,10 +8,10 @@ public class GlueBehavior : BodyBehavior
     public override BodyType Type => BodyType.Glue;
     public override string Name => "Glue";
     public override string Description => "Sticks to anything it touches";
-    public override string ColorHex => "#AED581";
+    public override string ColorHex => "#76FF03";
     public override double DefaultRadius => 17;
-    public override double DefaultMass => 10;
-    public override double DefaultRestitution => 0.05;
+    public override double DefaultMass => 12;
+    public override double DefaultRestitution => 0.02;
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
@@ -20,11 +20,32 @@ public class GlueBehavior : BodyBehavior
             if (body == other || other.IsStatic) continue;
             
             var dist = (float)Vector2.Distance(body.Position, other.Position);
-            if (dist < body.Radius + other.Radius + 10)
+            if (dist < body.Radius + other.Radius + 15)
             {
-                other.Velocity = other.Velocity * 0.9f;
-                body.Velocity = body.Velocity * 0.9f;
+                other.Velocity = other.Velocity * 0.85f;
+                body.Velocity = body.Velocity * 0.85f;
             }
+        }
+        
+        var leftWall = world.LeftBoundary + body.Radius + 5;
+        var rightWall = world.RightBoundary - body.Radius - 5;
+        var ground = world.GroundY - body.Radius - 5;
+        
+        if (body.Position.X < leftWall + 10 || 
+            body.Position.X > rightWall - 10 ||
+            body.Position.Y > ground - 10)
+        {
+            body.Velocity = Vector2.Zero;
+            body.IsStuck = true;
+        }
+        else
+        {
+            body.IsStuck = false;
+        }
+        
+        if (body.IsStuck)
+        {
+            body.Velocity = Vector2.Zero;
         }
     }
 }

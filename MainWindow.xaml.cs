@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using PhysicsSandbox.Engine;
 using PhysicsSandbox.Input;
@@ -30,6 +31,10 @@ public partial class MainWindow : Window
     private bool _isDragging = false;
     private Point _dragStartPosition;
     private DateTime _dragStartTime;
+    
+    private bool _isBuildMode = true;
+    private RigidBody? _grabbedBody;
+    private Point _grabOffset;
 
     public MainWindow()
     {
@@ -53,7 +58,7 @@ public partial class MainWindow : Window
 
     private void SetupInput()
     {
-        _inputHandler.RegisterKeyDown(Key.Space, TogglePause);
+        _inputHandler.RegisterKeyDown(Key.Space, ToggleMode);
         _inputHandler.RegisterKeyDown(Key.C, ClearWorld);
         _inputHandler.RegisterKeyDown(Key.G, ToggleGravity);
         _inputHandler.RegisterKeyDown(Key.W, ToggleWind);
@@ -72,9 +77,7 @@ public partial class MainWindow : Window
 
         _world.SetBoundaries(0, _canvasWidth, _canvasHeight);
 
-        _world.CreateBody(new Vector2(_canvasWidth / 2, _canvasHeight / 2), 30, 50, 0.7);
-
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 5; i++)
             SpawnRandomBody();
 
         _lastFpsTime = 0;
@@ -96,6 +99,22 @@ public partial class MainWindow : Window
         _gameLoop.Tick(deltaTime);
         CalculateFps(deltaTime);
         UpdateStatus();
+        
+        if (_grabbedBody != null)
+        {
+            UpdateGrabbedBody();
+        }
+    }
+
+    private void UpdateGrabbedBody()
+    {
+        if (_grabbedBody == null) return;
+        
+        var mousePos = _inputHandler.GetMousePosition();
+        var targetPos = new Vector2((float)(mousePos.X - _grabOffset.X), (float)(mousePos.Y - _grabOffset.Y));
+        
+        _grabbedBody.Position = targetPos;
+        _grabbedBody.Velocity = Vector2.Zero;
     }
 
     private void CalculateFps(double deltaTime)
@@ -111,14 +130,31 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnUpdate(double dt) => _world.Step(dt);
-    private void OnRender(double dt) => _renderer.UpdateBodies(_world.Bodies);
+    private void OnUpdate(double dt) 
+    {
+        if (!_isPaused && !_isBuildMode)
+        {
+            _world.Step(dt);
+        }
+    }
+    
+    private bool _isPaused = false;
+    
+    private void OnRender(double dt)
+    {
+        _renderer.UpdateBodies(_world.Bodies);
+    }
 
     private void UpdateStatus()
     {
         string status = $"Bodies: {_world.Bodies.Count} | FPS: {_currentFps:F0}";
+        
+        if (_isBuildMode) 
+            status += " | BUILD MODE";
+        else
+            status += " | PLAY MODE";
 
-        if (_world.IsPaused) status += " | PAUSED";
+        if (_isPaused) status += " | PAUSED";
         
         Vector2 gravity = _world.Gravity;
         if (gravity.Y > 0) status += " | ↓ Gravity";
@@ -135,36 +171,10 @@ public partial class MainWindow : Window
     private void SelectBodyType(BodyType type)
     {
         _selectedBodyType = type;
-        
-        var buttons = new[] { "NormalBodyButton", "BouncyBodyButton", "HeavyBodyButton", 
-            "ExplosiveBodyButton", "RepulsorBodyButton", "GravityWellBodyButton",
-            "AntiGravityBodyButton", "FreezerBodyButton", "TurboBodyButton", "PhantomBodyButton",
-            "SpikeBodyButton", "GlueBodyButton", "PlasmaBodyButton", "BlackHoleBodyButton", "LightningBodyButton" };
-        
-        foreach (var btnName in buttons)
-        {
-            if (FindName(btnName) is Border b)
-                b.Background = new SolidColorBrush(Color.FromArgb(255, 58, 58, 69));
-        }
     }
 
-    private void BodyButton_MouseEnter(object sender, MouseEventArgs e)
-    {
-        if (sender is Border b && b.Background is SolidColorBrush sb)
-        {
-            byte r = sb.Color.R;
-            byte g = sb.Color.G;
-            byte b2 = sb.Color.B;
-            b.Background = new SolidColorBrush(Color.FromArgb(255, 
-                (byte)System.Math.Min(255, r + 20),
-                (byte)System.Math.Min(255, g + 20), 
-                (byte)System.Math.Min(255, b2 + 20)));
-        }
-    }
-
-    private void BodyButton_MouseLeave(object sender, MouseEventArgs e)
-    {
-    }
+    private void BodyButton_MouseEnter(object sender, MouseEventArgs e) { }
+    private void BodyButton_MouseLeave(object sender, MouseEventArgs e) { }
 
     private void NormalBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -229,12 +239,28 @@ public partial class MainWindow : Window
 
     #endregion
 
-    #region Fling
+    #region Input
 
     private void OnMouseLeftDown(Point position)
     {
-        if (position.X < 0 || position.X > _canvasWidth || position.Y < 0 || position.Y > _canvasHeight)
+        if (_isBuildMode)
+        {
+            _isDragging = true;
+            _dragStartPosition = position;
+            _dragStartTime = DateTime.Now;
             return;
+        }
+        
+        foreach (var body in _world.Bodies)
+        {
+            var dist = Vector2.Distance(body.Position, new Vector2((float)position.X, (float)position.Y));
+            if (dist < body.Radius)
+            {
+                _grabbedBody = body;
+                _grabOffset = new Point(position.X - body.Position.X, position.Y - body.Position.Y);
+                return;
+            }
+        }
         
         _isDragging = true;
         _dragStartPosition = position;
@@ -243,8 +269,13 @@ public partial class MainWindow : Window
 
     private void OnMouseLeftUp(Point position)
     {
-        if (!_isDragging) return;
+        if (_grabbedBody != null)
+        {
+            _grabbedBody = null;
+            return;
+        }
         
+        if (!_isDragging) return;
         _isDragging = false;
         
         var dragDuration = (DateTime.Now - _dragStartTime).TotalSeconds;
@@ -259,7 +290,7 @@ public partial class MainWindow : Window
             if (velocity.Length > maxVelocity) velocity = velocity.Normalized * maxVelocity;
             SpawnBodyInternal(position, velocity);
         }
-        else
+        else if (_isBuildMode)
         {
             SpawnBodyInternal(position, Vector2.Zero);
         }
@@ -273,84 +304,52 @@ public partial class MainWindow : Window
         switch (type)
         {
             case BodyType.Normal:
-                radius = 15 + Random.Shared.NextDouble() * 10;
-                mass = radius * 0.5;
-                restitution = 0.5 + Random.Shared.NextDouble() * 0.3;
+                radius = 15; mass = 10; restitution = 0.5;
                 break;
             case BodyType.Bouncy:
-                radius = 12 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.4;
-                restitution = 0.9;
+                radius = 12; mass = 6; restitution = 0.95;
                 break;
             case BodyType.Heavy:
-                radius = 18 + Random.Shared.NextDouble() * 12;
-                mass = radius * 1.2;
-                restitution = 0.2;
+                radius = 20; mass = 30; restitution = 0.15;
                 break;
             case BodyType.Explosive:
-                radius = 20 + Random.Shared.NextDouble() * 10;
-                mass = radius * 0.3;
-                restitution = 0.4;
+                radius = 20; mass = 8; restitution = 0.4;
                 break;
             case BodyType.Repulsor:
-                radius = 16 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.4;
-                restitution = 0.6;
+                radius = 16; mass = 8; restitution = 0.6;
                 break;
             case BodyType.GravityWell:
-                radius = 14 + Random.Shared.NextDouble() * 6;
-                mass = radius * 0.3;
-                restitution = 0.5;
+                radius = 18; mass = 8; restitution = 0.3;
                 break;
             case BodyType.AntiGravity:
-                radius = 13 + Random.Shared.NextDouble() * 7;
-                mass = radius * 0.3;
-                restitution = 0.7;
+                radius = 16; mass = 5; restitution = 0.7;
                 break;
             case BodyType.Freezer:
-                radius = 15 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.5;
-                restitution = 0.3;
+                radius = 15; mass = 10; restitution = 0.3;
                 break;
             case BodyType.Turbo:
-                radius = 10 + Random.Shared.NextDouble() * 6;
-                mass = radius * 0.2;
-                restitution = 0.8;
+                radius = 10; mass = 3; restitution = 0.8;
                 break;
             case BodyType.Phantom:
-                radius = 16 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.3;
-                restitution = 0.5;
+                radius = 18; mass = 4; restitution = 0.5;
                 break;
             case BodyType.Spike:
-                radius = 14 + Random.Shared.NextDouble() * 6;
-                mass = radius * 0.4;
-                restitution = 0.95;
+                radius = 14; mass = 7; restitution = 0.98;
                 break;
             case BodyType.Glue:
-                radius = 17 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.5;
-                restitution = 0.1;
+                radius = 17; mass = 12; restitution = 0.02;
                 break;
             case BodyType.Plasma:
-                radius = 12 + Random.Shared.NextDouble() * 6;
-                mass = radius * 0.3;
-                restitution = 0.6;
+                radius = 12; mass = 4; restitution = 0.6;
                 break;
             case BodyType.BlackHole:
-                radius = 15 + Random.Shared.NextDouble() * 8;
-                mass = radius * 0.5;
-                restitution = 0;
+                radius = 15; mass = 15; restitution = 0;
                 break;
             case BodyType.Lightning:
-                radius = 11 + Random.Shared.NextDouble() * 5;
-                mass = radius * 0.25;
-                restitution = 0.7;
+                radius = 14; mass = 4; restitution = 0.7;
                 break;
             default:
-                radius = 15;
-                mass = 10;
-                restitution = 0.5;
+                radius = 15; mass = 10; restitution = 0.5;
                 break;
         }
         
@@ -368,7 +367,17 @@ public partial class MainWindow : Window
         _world.ForceManager.Explosion.Trigger(new Vector2(position.X, position.Y));
     }
 
-    private void TogglePause() => _world.IsPaused = !_world.IsPaused;
+    private void ToggleMode()
+    {
+        _isBuildMode = !_isBuildMode;
+    }
+
+    private void TogglePause()
+    {
+        _isPaused = !_isPaused;
+        _world.IsPaused = _isPaused;
+    }
+    
     private void ClearWorld() => _world.Clear();
     private void ToggleGravity() => _world.ToggleGravityDirection();
     
@@ -385,11 +394,58 @@ public partial class MainWindow : Window
     private void DecreaseTimeScale() => _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1);
     private void IncreaseTimeScale() => _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1);
 
-    private void Window_KeyDown(object sender, KeyEventArgs e) => _inputHandler.HandleKeyDown(e.Key);
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Space)
+        {
+            ToggleMode();
+            return;
+        }
+        _inputHandler.HandleKeyDown(e.Key);
+    }
+
     private void Window_KeyUp(object sender, KeyEventArgs e) => _inputHandler.HandleKeyUp(e.Key);
     private void Window_MouseMove(object sender, MouseEventArgs e) => _inputHandler.HandleMouseMove(e.GetPosition(GameCanvas));
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _inputHandler.HandleMouseLeftDown(e.GetPosition(GameCanvas));
-    private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) => _inputHandler.HandleMouseLeftUp(e.GetPosition(GameCanvas));
-    private void Window_MouseRightButtonDown(object sender, MouseButtonEventArgs e) => _inputHandler.HandleMouseRightDown(e.GetPosition(GameCanvas));
-    private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e) => _inputHandler.HandleMouseRightUp(e.GetPosition(GameCanvas));
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var position = e.GetPosition(GameCanvas);
+        
+        if (_isBuildMode)
+        {
+            SpawnBodyInternal(position, Vector2.Zero);
+        }
+        else
+        {
+            foreach (var body in _world.Bodies)
+            {
+                var dist = Vector2.Distance(body.Position, new Vector2((float)position.X, (float)position.Y));
+                if (dist < body.Radius)
+                {
+                    _grabbedBody = body;
+                    _grabOffset = new Point(position.X - body.Position.X, position.Y - body.Position.Y);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_grabbedBody != null)
+        {
+            _grabbedBody = null;
+        }
+    }
+
+    private void Window_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var position = e.GetPosition(GameCanvas);
+        _inputHandler.HandleMouseRightDown(position);
+    }
+
+    private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        var position = e.GetPosition(GameCanvas);
+        _inputHandler.HandleMouseRightUp(position);
+    }
 }

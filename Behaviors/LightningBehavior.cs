@@ -5,18 +5,24 @@ namespace PhysicsSandbox.Behaviors;
 
 public class LightningBehavior : BodyBehavior
 {
+    private float _zapTimer = 0;
+    
     public override BodyType Type => BodyType.Lightning;
     public override string Name => "Lightning";
     public override string Description => "Zaps nearby objects with electric force!";
-    public override string ColorHex => "#FF9800";
-    public override double DefaultRadius => 11;
-    public override double DefaultMass => 3;
+    public override string ColorHex => "#FFD600";
+    public override double DefaultRadius => 14;
+    public override double DefaultMass => 4;
     public override double DefaultRestitution => 0.7;
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        const float chainRadius = 180f;
-        const float chainStrength = 6000f;
+        const float chainRadius = 200f;
+        const float chainStrength = 10000f;
+        
+        _zapTimer += (float)dt;
+        
+        if (_zapTimer > 0.1f) _zapTimer = 0;
 
         foreach (var other in world.Bodies)
         {
@@ -30,6 +36,10 @@ public class LightningBehavior : BodyBehavior
                 var forceMagnitude = chainStrength * (1 - distance / chainRadius);
                 var force = direction.Normalized * forceMagnitude;
                 other.ApplyForce(force);
+                
+                var perp = new Vector2(-direction.Y * 0.5f, direction.X * 0.5f);
+                var zap = perp * forceMagnitude * 0.4f * System.Math.Abs(System.Math.Sin(_zapTimer * 30));
+                other.ApplyForce(zap);
             }
         }
     }
