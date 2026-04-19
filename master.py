@@ -5,6 +5,7 @@ import time
 import csv
 import json
 import subprocess
+import glob
 import traceback
 from datetime import datetime
 
@@ -77,9 +78,11 @@ def build_engine():
 
     logger.log_info("Dotnet publish completed successfully")
 
+    # Robustly locate the built executable (may be in a subdirectory or with different name)
     output_exe = os.path.join(build_dir, "ChessEngine_new.exe")
     final_exe = os.path.join(build_dir, "ChessEngine.exe")
 
+    # If the expected exe exists, rename it
     if os.path.exists(output_exe):
         logger.log_info(f"Found output executable: {output_exe}")
         if os.path.exists(final_exe):
@@ -90,11 +93,35 @@ def build_engine():
         print(f"Engine built and replaced: {final_exe}")
         logger.log_info(f"Engine build successful: {final_exe}")
         return
-    else:
-        error_msg = f"Expected output executable not found: {output_exe}"
-        logger.log_error(error_msg)
-        print(f"Build failed: {error_msg}")
-        raise FileNotFoundError(error_msg)
+
+    # Search for any .exe in the build directory (recursively)
+    exe_candidates = glob.glob(os.path.join(build_dir, "**", "*.exe"), recursive=True)
+    if exe_candidates:
+        # Pick the first .exe that is not already ChessEngine.exe
+        src_exe = None
+        for cand in exe_candidates:
+            if not cand.lower().endswith("chessengine.exe"):
+                src_exe = cand
+                break
+        if src_exe is None:
+            # All exes are named ChessEngine.exe? Something odd but use first
+            src_exe = exe_candidates[0]
+        logger.log_info(f"Found executable: {src_exe}")
+        if os.path.abspath(src_exe) != os.path.abspath(final_exe):
+            if os.path.exists(final_exe):
+                os.remove(final_exe)
+            os.rename(src_exe, final_exe)
+            print(f"Engine built and replaced: {final_exe}")
+            logger.log_info(f"Engine build successful: {final_exe}")
+        else:
+            print(f"Engine already built: {final_exe}")
+            logger.log_info(f"Engine already built at {final_exe}")
+        return
+
+    error_msg = f"Expected output executable not found: {output_exe} and no .exe found in {build_dir}"
+    logger.log_error(error_msg)
+    print(f"Build failed: {error_msg}")
+    raise FileNotFoundError(error_msg)
 
 
 def run_training(args):
