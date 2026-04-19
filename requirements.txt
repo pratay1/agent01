@@ -1,7 +1,0 @@
-torch>=2.2.0
-python-chess>=1.999
-numpy>=1.26
-rich>=13.7
-tqdm>=4.66
-onnx>=1.16
-onnxruntime>=1.17
