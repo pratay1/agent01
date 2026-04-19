@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            padding: 24px;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #333;
+            font-weight: 300;
+            font-size: 2.5rem;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: cardIn 0.5s ease-out backwards;
+        }
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.15s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.25s; }
+        .card:nth-child(5) { animation-delay: 0.3s; }
+        .card:nth-child(6) { animation-delay: 0.35s; }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #222;
+            line-height: 1;
+        }
+        .card-sub {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        .chart-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            animation: cardIn 0.5s ease-out 0.4s backwards;
+        }
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        canvas {
+            max-height: 300px;
+        }
+        .wins-draws-losses {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .wdl-badge {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .win { background: #d4edda; color: #155724; }
+        .draw { background: #fff3cd; color: #856404; }
+        .loss { background: #f8d7da; color: #721c24; }
+        .progress-wrap {
+            margin-top: 12px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6c9ff0, #4a6fa5);
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+        .last-updated {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 24px;
+        }
+        .refresh-hint {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+        @media (max-width: 900px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ChessAI Training Dashboard</h1>
+            <div class="subtitle">Real-time model training metrics</div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Current Epoch</div>
+                <div class="card-value" id="epoch">0</div>
+                <div class="card-sub">Training progress</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Games</div>
+                <div class="card-value" id="games">0</div>
+                <div class="card-sub" id="games-sub">Self-play games</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Estimated Elo</div>
+                <div class="card-value" id="elo">1200</div>
+                <div class="card-sub" id="elo-sub">Best: —</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Combined Loss</div>
+                <div class="card-value" id="loss">0.0000</div>
+                <div class="card-sub">
+                    <span style="color:#28a745">P: <span id="p-loss">0.0000</span></span>
+                    &nbsp;
+                    <span style="color:#dc3545">V: <span id="v-loss">0.0000</span></span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Buffer Fill</div>
+                <div class="card-value" id="buffer">0%</div>
+                <div class="card-sub">Replay buffer usage</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Last 100 Games</div>
+                <div class="wins-draws-losses">
+                    <div class="wdl-badge win"><span id="wins">0</span> W</div>
+                    <div class="wdl-badge draw"><span id="draws">0</span> D</div>
+                    <div class="wdl-badge loss"><span id="losses">0</span> L</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-container">
+                <div class="chart-title">Training Loss Over Time</div>
+                <canvas id="lossChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Elo Rating History</div>
+                <canvas id="eloChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-container" style="grid-column: 1 / -1;">
+                <div class="chart-title">Game Length (Moves) History</div>
+                <canvas id="movesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="last-updated">
+            Last updated: <span id="last-updated">—</span>
+        </div>
+        <div class="refresh-hint">
+            Updates automatically every 5 seconds
+        </div>
+
+        <script>
+            // Initialize charts with empty data
+            const lossCtx = document.getElementById('lossChart').getContext('2d');
+            const lossChart = new Chart(lossCtx, {
+                type: 'line',
+                data: { datasets: [] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { display: false }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } } }
+            });
+
+            const eloCtx = document.getElementById('eloChart').getContext('2d');
+            const eloChart = new Chart(eloCtx, {
+                type: 'line',
+                data: { datasets: [] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#f0f0f0' } } } }
+            });
+
+            const movesCtx = document.getElementById('movesChart').getContext('2d');
+            const movesChart = new Chart(movesCtx, {
+                type: 'bar',
+                data: { datasets: [] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { beginAtZero: true, grid: { color: '#f0f0f0' } } } }
+            });
+
+            function updateUI(data) {
+                document.getElementById('epoch').textContent = data.epoch;
+                document.getElementById('games').textContent = data.games;
+                document.getElementById('elo').textContent = data.elo;
+                document.getElementById('loss').textContent = data.combined_loss?.toFixed(4) || '0.0000';
+                document.getElementById('p-loss').textContent = data.policy_loss?.toFixed(4) || '0.0000';
+                document.getElementById('v-loss').textContent = data.value_loss?.toFixed(4) || '0.0000';
+                document.getElementById('buffer').textContent = Math.round(data.buffer_pct * 100) + '%';
+                document.getElementById('wins').textContent = data.wdl?.win || 0;
+                document.getElementById('draws').textContent = data.wdl?.draw || 0;
+                document.getElementById('losses').textContent = data.wdl?.loss || 0;
+                document.getElementById('last-updated').textContent = new Date(data.timestamp).toLocaleString();
+                document.getElementById('elo-sub').textContent = 'Best: ' + data.best_elo;
+
+                const lossHist = data.loss_history || [];
+                lossChart.data = {
+                    labels: lossHist.map((_, i) => i),
+                    datasets: [
+                        { label: 'Policy Loss', data: lossHist.map(h => h[0] || 0), borderColor: '#28a745', fill: false, tension: 0.3 },
+                        { label: 'Value Loss', data: lossHist.map(h => h[1] || 0), borderColor: '#dc3545', fill: false, tension: 0.3 },
+                        { label: 'Combined Loss', data: lossHist.map(h => h[2] || 0), borderColor: '#4a6fa5', fill: false, tension: 0.3 }
+                    ]
+                };
+                lossChart.update();
+
+                const eloHist = data.elo_history || [];
+                eloChart.data = {
+                    labels: eloHist.map((_, i) => i),
+                    datasets: [{ label: 'Elo', data: eloHist, borderColor: '#4a6fa5', fill: true, backgroundColor: 'rgba(74, 111, 165, 0.1)', tension: 0.3 }]
+                };
+                eloChart.update();
+
+                const movesHist = data.moves_history || [];
+                movesChart.data = {
+                    labels: movesHist.map((_, i) => i),
+                    datasets: [{ label: 'Moves per Game', data: movesHist, backgroundColor: '#6c9ff0' }]
+                };
+                movesChart.update();
+            }
+
+            function loadData() {
+                return new Promise((resolve, reject) => {
+                    const old = document.getElementById('dashboard-data-script');
+                    if (old) old.remove();
+                    const script = document.createElement('script');
+                    script.id = 'dashboard-data-script';
+                    script.src = 'dashboard_data.js?t=' + Date.now();
+                    script.onload = () => {
+                        const d = window.DASHBOARD_DATA;
+                        d ? resolve(d) : reject('no data');
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+
+            async function refresh() {
+                try {
+                    const d = await loadData();
+                    updateUI(d);
+                } catch (e) {
+                    console.log('Waiting for training data...');
+                }
+            }
+
+            setInterval(refresh, 5000);
+            refresh();
+        </script>
+</body>
+</html>

@@ -25,6 +25,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = r"C:\Users\prata\agent01"
+DASHBOARD_DIR = os.path.join(BASE_DIR, "dashboard")
+DASHBOARD_DATA_JS = os.path.join(DASHBOARD_DIR, "dashboard_data.js")
+# File URL with forward slashes for browser compatibility
+DASHBOARD_URL = "file:///" + DASHBOARD_DIR.replace("\\", "/") + "/dashboard.html"
+DASHBOARD_DIR = os.path.join(BASE_DIR, "dashboard")
+DASHBOARD_DATA = os.path.join(DASHBOARD_DIR, "dashboard_data.json")
+DASHBOARD_URL = f"file://{DASHBOARD_DIR}/dashboard.html"
 
 
 def save_checkpoint_and_export(network, trainer):
@@ -98,6 +105,86 @@ def build_engine():
 
 
 def run_training(args):
+    def print_dashboard_link():
+        """Print a clickable hyperlink to the training dashboard."""
+        try:
+            link = f"\033]8;;{DASHBOARD_URL}\033\\▶ Open Training Dashboard \033]8;;\033\\"
+            print("\n" + "="*60)
+            print(link)
+            print("="*60 + "\n")
+            # Fallback plain URL for terminals without hyperlink support
+            print(f"Or open manually: {DASHBOARD_URL}\n")
+        except Exception as e:
+            logger.log_exception(e, "print_dashboard_link")
+
+    def write_dashboard_data():
+        """Write current training metrics to dashboard_data.json."""
+        try:
+            os.makedirs(DASHBOARD_DIR, exist_ok=True)
+
+            wdl = {"win": 0, "draw": 0, "loss": 0}
+            game_log_path = os.path.join(BASE_DIR, "logs", "game_log.jsonl")
+            if os.path.exists(game_log_path):
+                try:
+                    with open(game_log_path, 'r') as f:
+                        lines = f.readlines()[-100:]
+                    for line in lines:
+                        try:
+                            r = json.loads(line).get('result', 0)
+                            if r == 1: wdl["win"] += 1
+                            elif r == 0: wdl["draw"] += 1
+                            elif r == -1: wdl["loss"] += 1
+                        except:
+                            pass
+                except:
+                    pass
+
+            loss_history = []
+            training_log_path = os.path.join(BASE_DIR, "logs", "training_log.csv")
+            if os.path.exists(training_log_path):
+                try:
+                    with open(training_log_path, 'r', newline='') as f:
+                        rows = list(csv.reader(f))[-20:]
+                        for row in rows[1:]:
+                            if len(row) >= 5:
+                                loss_history.append([
+                                    float(row[2]) if row[2] else 0.0,
+                                    float(row[3]) if row[3] else 0.0,
+                                    float(row[4]) if row[4] else 0.0
+                                ])
+                except:
+                    pass
+
+            try:
+                curr_elo = current_elo
+            except NameError:
+                curr_elo = 1200
+                if loss_history:
+                    latest = loss_history[-1][2] if loss_history[-1] else 1.0
+                    curr_elo = 1200 + int((latest - 1.0) * -100)
+
+            data = {
+                "epoch": epoch,
+                "games": total_games,
+                "policy_loss": game_state.get('policy_loss', 0.0),
+                "value_loss": game_state.get('value_loss', 0.0),
+                "combined_loss": game_state.get('combined_loss', 0.0),
+                "elo": curr_elo,
+                "best_elo": best_elo,
+                "buffer_pct": buffer.fill_percentage(),
+                "wdl": wdl,
+                "loss_history": loss_history,
+                "elo_history": elo_history[-50:],
+                "moves_history": moves_history[-50:],
+                "timestamp": datetime.now().isoformat()
+            }
+
+            js_content = f"window.DASHBOARD_DATA = {json.dumps(data, indent=2)};"
+            with open(DASHBOARD_DATA_JS, 'w') as f:
+                f.write(js_content)
+        except Exception as e:
+            logger.log_exception(e, "write_dashboard_data")
+
     try:
         logger.log_info("Starting run_training function")
         from rich.console import Console
@@ -148,6 +235,8 @@ def run_training(args):
 
         game_log_path = os.path.join(BASE_DIR, "logs", "game_log.jsonl")
         logger.log_info(f"Game log path: {game_log_path}")
+
+        print_dashboard_link()
 
         epoch = start_epoch
         total_games = 0
@@ -500,6 +589,7 @@ def run_training(args):
 
                         epoch += 1
                         live.update(make_dashboard())
+                        write_dashboard_data()
                     except Exception as e:
                         logger.log_exception(e, "training loop iteration")
                         # Continue training despite errors in individual iterations
