@@ -84,24 +84,31 @@ public class Renderer
 
     private Ellipse CreateBodyShape(RigidBody body)
     {
-        Color baseColor;
-        if (body.Mass < 1)
-            baseColor = Color.FromRgb(255, 100, 100);
-        else if (body.Mass < 5)
-            baseColor = Color.FromRgb(100, 200, 255);
-        else if (body.Mass < 20)
-            baseColor = Color.FromRgb(100, 255, 150);
-        else
-            baseColor = Color.FromRgb(255, 200, 100);
+        var colorHex = body.BodyType.GetColorHex();
+        var color = (Color)ColorConverter.ConvertFromString(colorHex);
+        
+        Brush stroke = Brushes.White;
+        double strokeThickness = 1.5;
+        
+        if (body.BodyType == BodyType.BlackHole)
+        {
+            stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9C27B0"));
+            strokeThickness = 3;
+        }
+        else if (body.BodyType == BodyType.Spike)
+        {
+            stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFCDD2"));
+            strokeThickness = 2;
+        }
 
         return new Ellipse
         {
             Width = body.Radius * 2,
             Height = body.Radius * 2,
-            Fill = new SolidColorBrush(Color.FromArgb(200, baseColor.R, baseColor.G, baseColor.B)),
-            Stroke = Brushes.White,
-            StrokeThickness = 1.5,
-            Opacity = 0.9
+            Fill = new SolidColorBrush(Color.FromArgb(220, color.R, color.G, color.B)),
+            Stroke = stroke,
+            StrokeThickness = strokeThickness,
+            Opacity = 0.95
         };
     }
 

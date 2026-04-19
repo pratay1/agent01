@@ -8,7 +8,18 @@ public enum BodyType
     Bouncy,
     Heavy,
     Explosive,
-    Repulsor
+    Repulsor,
+    GravityWell,
+    AntiGravity,
+    Freezer,
+    Turbo,
+    Phantom,
+    Spike,
+    Glue,
+    Plasma,
+    BlackHole,
+    Lightning,
+    Fire
 }
 
 public class RigidBody
@@ -51,6 +62,9 @@ public class RigidBody
     }
     public BodyType BodyType { get; set; }
     public bool HasExploded { get; set; }
+    public bool IsFrozen { get; set; }
+    public bool IsStuck { get; set; }
+    public double LifeTime { get; set; }
 
     public bool IsStatic => Mass == 0 || InverseMass == 0;
 
@@ -77,13 +91,16 @@ public class RigidBody
         Restitution = System.Math.Clamp(restitution, 0, 1);
         BodyType = bodyType;
         HasExploded = false;
+        IsFrozen = false;
+        IsStuck = false;
+        LifeTime = 0;
 
         InverseMass = mass > 0 ? 1.0 / mass : 0;
     }
 
     public void ApplyImpulse(Vector2 impulse)
     {
-        if (!IsStatic)
+        if (!IsStatic && !IsFrozen)
         {
             _velocity = _velocity + impulse * InverseMass;
         }
@@ -91,7 +108,7 @@ public class RigidBody
 
     public void ApplyForce(Vector2 force)
     {
-        if (InverseMass > 0)
+        if (InverseMass > 0 && !IsFrozen)
         {
             _acceleration = _acceleration + force * InverseMass;
         }
@@ -104,7 +121,7 @@ public class RigidBody
 
     public void Integrate(double dt)
     {
-        if (IsStatic) return;
+        if (IsStatic || IsFrozen) return;
 
         _velocity = _velocity + _acceleration * dt;
         _position = _position + _velocity * dt;
@@ -124,4 +141,49 @@ public class RigidBody
                !double.IsNaN(_velocity.X) && !double.IsNaN(_velocity.Y) &&
                !double.IsInfinity(_position.X) && !double.IsInfinity(_position.Y);
     }
+}
+
+public static class BodyTypeExtensions
+{
+    public static string GetDescription(this BodyType type) => type switch
+    {
+        BodyType.Normal => "Standard physics body",
+        BodyType.Bouncy => "Super bouncy - bounces like crazy!",
+        BodyType.Heavy => "Massive weight - pushes through everything",
+        BodyType.Explosive => "BOOM! Explodes on contact with anything",
+        BodyType.Repulsor => "Pushes away everything nearby with huge force!",
+        BodyType.GravityWell => "Attracts nearby objects like a black hole",
+        BodyType.AntiGravity => "Floats upward - defies gravity completely",
+        BodyType.Freezer => "Slows down anything it touches",
+        BodyType.Turbo => "Accelerates continuously - goes supersonic!",
+        BodyType.Phantom => "Passes through but affects objects",
+        BodyType.Spike => "Violent bounce - super bouncy spike!",
+        BodyType.Glue => "Sticks to anything it touches",
+        BodyType.Plasma => "Electric zigzag chains to nearby!",
+        BodyType.BlackHole => "Sucks in everything & grows!",
+        BodyType.Lightning => "Zaps nearby objects with electric force!",
+        BodyType.Fire => "Rising flames - disappears after 3 seconds",
+        _ => "Unknown body type"
+    };
+
+    public static string GetColorHex(this BodyType type) => type switch
+    {
+        BodyType.Normal => "#4FC3F7",
+        BodyType.Bouncy => "#81C784",
+        BodyType.Heavy => "#FFB74D",
+        BodyType.Explosive => "#E53935",
+        BodyType.Repulsor => "#BA68C8",
+        BodyType.GravityWell => "#4DB6AC",
+        BodyType.AntiGravity => "#00BCD4",
+        BodyType.Freezer => "#81D4FA",
+        BodyType.Turbo => "#FFEB3B",
+        BodyType.Phantom => "#9575CD",
+        BodyType.Spike => "#F44336",
+        BodyType.Glue => "#AED581",
+        BodyType.Plasma => "#E91E63",
+        BodyType.BlackHole => "#0D0D0D",
+        BodyType.Lightning => "#FF9800",
+        BodyType.Fire => "#FF5722",
+        _ => "#4FC3F7"
+    };
 }
