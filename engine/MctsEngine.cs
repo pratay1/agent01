@@ -27,8 +27,8 @@ public class MCTSEngine
         this.temperature = temp;
     }
 
-    public void SetSimulations(int count) => numSimulations = count;
-    public void SetTemperature(int temp) => temperature = temp;
+    public void SetSimulations(int count) => numSimulations = Math.Max(1, count);
+    public void SetTemperature(int temp) => temperature = Math.Max(0, temp);
 
     public string Search(BoardState board, int timeLimitMs = 0, CancellationToken? cancellationToken = null)
     {
@@ -36,21 +36,25 @@ public class MCTSEngine
 
         var legalMoves = MoveGenerator.GenerateLegalMoves(board);
         if (legalMoves.Count == 0)
-            return "";
+            return "0000"; // ALWAYS return something
 
+        // initialize root
         foreach (var move in legalMoves)
         {
-            root.Children[move] = new MCTSNode { Prior = 1.0 / legalMoves.Count };
+            root.Children[move] = new MCTSNode
+            {
+                Prior = 1.0 / legalMoves.Count
+            };
         }
 
         DateTime startTime = DateTime.Now;
         int simulationCount = 0;
 
-        while (simulationCount < numSimulations)
+        while (true)
         {
             if (cancellationToken.HasValue && cancellationToken.Value.IsCancellationRequested)
                 break;
-            
+
             if (timeLimitMs > 0 && (DateTime.Now - startTime).TotalMilliseconds >= timeLimitMs)
                 break;
 
@@ -61,30 +65,54 @@ public class MCTSEngine
             simulationCount++;
         }
 
-        if (temperature == 0 || root.Children.Count == 0)
+        // SAFETY: if something went wrong
+        if (root.Children.Count == 0)
+            return legalMoves[0];
+
+        // pick best move
+        if (temperature == 0)
         {
-            var best = root.Children.OrderByDescending(c => c.Value.VisitCount).First();
-            return best.Key;
+            var best = root.Children
+                .OrderByDescending(c => c.Value.VisitCount)
+                .FirstOrDefault();
+
+            return best.Key ?? legalMoves[0];
         }
         else
         {
-            var visits = root.Children.Select(c => (c.Key, Count: Math.Pow(c.Value.VisitCount, 1.0 / temperature))).ToList();
-            var total = visits.Sum(v => v.Count);
-            var probs = visits.Select(v => v.Count / total).ToArray();
-            var idx = random.Next(probs.Length);
-            return visits[idx].Key;
+            var visits = root.Children
+                .Select(c => (Move: c.Key, Count: Math.Pow(c.Value.VisitCount + 1e-6, 1.0 / temperature)))
+                .ToList();
+
+            double total = visits.Sum(v => v.Count);
+
+            if (total <= 0)
+                return legalMoves[random.Next(legalMoves.Count)];
+
+            double r = random.NextDouble() * total;
+            double cumulative = 0;
+
+            foreach (var v in visits)
+            {
+                cumulative += v.Count;
+                if (r <= cumulative)
+                    return v.Move;
+            }
+
+            return visits.Last().Move;
         }
     }
 
     private void RunSimulation(BoardState board, MCTSNode node)
     {
         var path = new List<MCTSNode> { node };
-        var movePath = new List<string>();
 
+        // SELECTION
         while (node.Expanded && !board.IsGameOver())
         {
-            var bestChild = SelectChild(node, board);
-            if (bestChild.Key == null)
+            var bestChild = SelectChild(node);
+
+            if (bestChild.Key == null || bestChild.Value == null)
                 break;
 
             var move = board.ParseUci(bestChild.Key);
@@ -92,68 +120,86 @@ public class MCTSEngine
                 break;
 
             board.MakeMove(move.Value);
-            path.Add(bestChild.Value);
-            movePath.Add(bestChild.Key);
             node = bestChild.Value;
+            path.Add(node);
         }
 
         double value;
+
+        // EXPANSION + EVAL
         if (!board.IsGameOver())
         {
             var tensor = board.ToTensor();
             var (policyLogits, eval) = network.RunInference(tensor);
 
             var legalMoves = MoveGenerator.GenerateLegalMoves(board);
-            var policy = new double[4672];
+
+            double[] policy = new double[4672];
             double sum = 0;
+
             foreach (var move in legalMoves)
             {
                 int idx = MoveToIndex(move, board);
                 if (idx >= 0 && idx < 4672)
                 {
-                    policy[idx] = Math.Exp(policyLogits[idx]);
-                    sum += policy[idx];
+                    double p = Math.Exp(policyLogits[idx]);
+                    policy[idx] = p;
+                    sum += p;
                 }
             }
+
             if (sum > 0)
             {
                 for (int i = 0; i < policy.Length; i++)
                     policy[i] /= sum;
             }
+            else
+            {
+                // fallback uniform
+                foreach (var move in legalMoves)
+                {
+                    int idx = MoveToIndex(move, board);
+                    if (idx >= 0 && idx < 4672)
+                        policy[idx] = 1.0 / legalMoves.Count;
+                }
+            }
 
             node.Expanded = true;
+
             foreach (var move in legalMoves)
             {
                 int idx = MoveToIndex(move, board);
-                if (idx >= 0 && idx < 4672)
+                double prior = (idx >= 0 && idx < 4672) ? policy[idx] : 0;
+
+                node.Children[move] = new MCTSNode
                 {
-                    node.Children[move] = new MCTSNode { Prior = policy[idx] };
-                }
+                    Prior = prior
+                };
             }
 
             value = eval;
         }
         else
         {
-            var winner = board.GetWinner();
-            if (winner == 0)
-                value = 1.0;
-            else if (winner == 1)
-                value = -1.0;
-            else
-                value = 0.0;
+            int winner = board.GetWinner();
+
+            if (winner == 0) value = 1.0;
+            else if (winner == 1) value = -1.0;
+            else value = 0.0;
         }
 
+        // BACKPROP
         double sign = 1.0;
         for (int i = path.Count - 1; i >= 0; i--)
         {
-            path[i].VisitCount++;
-            path[i].ValueSum += sign * value;
+            var n = path[i];
+            n.VisitCount++;
+            n.ValueSum += sign * value;
             sign *= -1.0;
         }
     }
 
-    private KeyValuePair<string, MCTSNode> SelectChild(MCTSNode node, BoardState board)
+    private KeyValuePair<string, MCTSNode> SelectChild(MCTSNode node)
     {
         if (node.Children.Count == 0)
             return new KeyValuePair<string, MCTSNode>(null, null);
@@ -163,13 +209,16 @@ public class MCTSEngine
 
         foreach (var child in node.Children)
         {
-            double q = child.Value.VisitCount > 0 ? child.Value.ValueSum / child.Value.VisitCount : 0;
-            double u = cpuct * child.Value.Prior * Math.Sqrt(node.VisitCount) / (1 + child.Value.VisitCount);
-            double value = q + u;
+            var c = child.Value;
 
-            if (value > bestValue)
+            double q = c.VisitCount > 0 ? c.ValueSum / c.VisitCount : 0;
+            double u = cpuct * c.Prior * Math.Sqrt(node.VisitCount + 1) / (1 + c.VisitCount);
+
+            double score = q + u;
+
+            if (score > bestValue)
             {
-                bestValue = value;
+                bestValue = score;
                 bestMove = child.Key;
             }
         }
@@ -197,6 +246,7 @@ public class MCTSEngine
         int deltaCol = toCol - fromCol;
 
         int moveType;
+
         if (!move.Value.Promotion.HasValue)
         {
             if (deltaRow == 0 && deltaCol > 0) moveType = 0;
@@ -209,16 +259,20 @@ public class MCTSEngine
             else if (deltaRow > 0 && deltaCol == -deltaRow) moveType = 7;
             else
             {
-                var dirs = new (int, int)[] { (-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1) };
-                moveType = 8 + Array.FindIndex(dirs, d => d == (deltaRow, deltaCol));
+                var dirs = new (int, int)[]
+                {
+                    (-2, -1), (-2, 1), (-1, -2), (-1, 2),
+                    (1, -2), (1, 2), (2, -1), (2, 1)
+                };
+
+                int idx = Array.FindIndex(dirs, d => d == (deltaRow, deltaCol));
+                moveType = idx >= 0 ? 8 + idx : 0;
             }
         }
         else
         {
             int promo = move.Value.Promotion.Value;
-            if (deltaCol == 0) moveType = 56 + promo;
-            else if (deltaRow == 0) moveType = 64 + promo;
-            else moveType = 56 + promo;
+            moveType = 56 + promo;
         }
 
         return from * 73 + moveType;

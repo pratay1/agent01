@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 public class UciHandler
@@ -7,8 +8,10 @@ public class UciHandler
     private BoardState board;
     private MCTSEngine engine;
     private Evaluator evaluator;
+
     private int numSimulations = 800;
     private int temperature = 0;
+
     private bool isSearching = false;
     private CancellationTokenSource? searchCts;
 
@@ -26,82 +29,77 @@ public class UciHandler
         var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return;
 
-        var command = parts[0].ToLower();
-
-        switch (command)
+        switch (parts[0].ToLower())
         {
             case "uci":
-                HandleUci();
+                Console.WriteLine("id name ChessAI");
+                Console.WriteLine("id author prata");
+                Console.WriteLine("option name SimCount type spin default 800 min 1 max 100000");
+                Console.WriteLine("option name Temperature type spin default 0 min 0 max 10");
+                Console.WriteLine("uciok");
+                Console.Out.Flush();
                 break;
+
             case "isready":
                 Console.WriteLine("readyok");
+                Console.Out.Flush();
                 break;
+
             case "ucinewgame":
-                HandleUciNewGame();
+                board = new BoardState();
                 break;
+
             case "position":
                 HandlePosition(parts);
                 break;
+
             case "go":
                 HandleGo(parts);
                 break;
+
             case "stop":
                 HandleStop();
                 break;
+
             case "quit":
-                HandleQuit();
+                HandleStop();
+                Environment.Exit(0);
                 break;
+
             case "setoption":
                 HandleSetOption(parts);
                 break;
         }
     }
 
-    private void HandleUci()
-    {
-        Console.WriteLine("id name ChessAI");
-        Console.WriteLine("id author prata");
-        Console.WriteLine("option name SimCount type default 800");
-        Console.WriteLine("option name Temperature type default 0");
-        Console.WriteLine("uciok");
-    }
-
-    private void HandleUciNewGame()
-    {
-        board = new BoardState();
-    }
-
     private void HandlePosition(string[] parts)
     {
         if (parts.Length < 2) return;
 
-        if (parts[1].ToLower() == "startpos")
+        if (parts[1] == "startpos")
         {
             board = new BoardState();
-            if (parts.Length > 2 && parts[2].ToLower() == "moves")
+
+            int moveIndex = Array.IndexOf(parts, "moves");
+            if (moveIndex != -1)
             {
-                for (int i = 2; i < parts.Length; i++)
-                {
-                    if (parts[i].ToLower() == "moves") continue;
+                for (int i = moveIndex + 1; i < parts.Length; i++)
                     ApplyMove(parts[i]);
-                }
             }
         }
-        else if (parts[1].ToLower() == "fen")
+        else if (parts[1] == "fen")
         {
-            int fenStart = 2;
-            int fenEnd = Array.IndexOf(parts, "moves");
-            if (fenEnd == -1) fenEnd = parts.Length;
-            
-            string fen = string.Join(" ", parts.Skip(fenStart).Take(fenEnd - fenStart));
+            int moveIndex = Array.IndexOf(parts, "moves");
+            string fen = moveIndex == -1
+                ? string.Join(" ", parts.Skip(2))
+                : string.Join(" ", parts.Skip(2).Take(moveIndex - 2));
+
             board = new BoardState(fen);
 
-            if (fenEnd < parts.Length)
+            if (moveIndex != -1)
             {
-                for (int i = fenEnd + 1; i < parts.Length; i++)
-                {
+                for (int i = moveIndex + 1; i < parts.Length; i++)
                     ApplyMove(parts[i]);
-                }
             }
         }
     }
@@ -110,17 +108,13 @@ public class UciHandler
     {
         var move = board.ParseUci(uciMove);
         if (move != null)
-        {
             board.MakeMove(move.Value);
-        }
     }
 
     private void HandleGo(string[] parts)
     {
         if (isSearching)
-        {
             HandleStop();
-        }
 
         int movetime = 0;
         int wtime = 0, btime = 0, winc = 0, binc = 0;
@@ -128,27 +122,22 @@ public class UciHandler
 
         for (int i = 1; i < parts.Length; i++)
         {
-            switch (parts[i].ToLower())
+            switch (parts[i])
             {
                 case "movetime":
-                    if (i + 1 < parts.Length)
-                        movetime = int.Parse(parts[i + 1]);
+                    movetime = int.Parse(parts[++i]);
                     break;
                 case "wtime":
-                    if (i + 1 < parts.Length)
-                        wtime = int.Parse(parts[i + 1]);
+                    wtime = int.Parse(parts[++i]);
                     break;
                 case "btime":
-                    if (i + 1 < parts.Length)
-                        btime = int.Parse(parts[i + 1]);
+                    btime = int.Parse(parts[++i]);
                     break;
                 case "winc":
-                    if (i + 1 < parts.Length)
-                        winc = int.Parse(parts[i + 1]);
+                    winc = int.Parse(parts[++i]);
                     break;
                 case "binc":
-                    if (i + 1 < parts.Length)
-                        binc = int.Parse(parts[i + 1]);
+                    binc = int.Parse(parts[++i]);
                     break;
                 case "infinite":
                     infinite = true;
@@ -156,16 +145,17 @@ public class UciHandler
             }
         }
 
-        if (wtime > 0 && btime > 0 && !infinite)
+        if (!infinite && wtime > 0 && btime > 0)
         {
-            int movesToGo = 30;
             int myTime = board.Turn ? wtime : btime;
             int inc = board.Turn ? winc : binc;
-            movetime = Math.Min(myTime / movesToGo + inc, myTime - 1000);
+
+            int calculated = myTime / 30 + inc;
+            movetime = Math.Max(10, Math.Min(calculated, myTime - 100));
         }
 
-        if (movetime == 0) movetime = 30000;
-        movetime = Math.Min(movetime, 30000);
+        if (movetime <= 0)
+            movetime = 1000; // safe fallback (1 second)
 
         StartSearch(movetime);
     }
@@ -175,56 +165,53 @@ public class UciHandler
         isSearching = true;
         searchCts = new CancellationTokenSource();
 
-        Thread searchThread = new Thread(() =>
+        try
         {
-            DateTime startTime = DateTime.Now;
-            var bestMove = engine.Search(board, timeLimitMs, searchCts.Token);
-            int elapsedMs = (int)(DateTime.Now - startTime).TotalMilliseconds;
+            DateTime start = DateTime.Now;
 
-            if (!searchCts.Token.IsCancellationRequested)
-            {
-                LogSearch(bestMove, elapsedMs);
-                Console.WriteLine($"bestmove {bestMove}");
-            }
-            
-            isSearching = false;
-        });
+            string bestMove = engine.Search(board, timeLimitMs, searchCts.Token);
 
-        searchThread.IsBackground = true;
-        searchThread.Start();
+            int elapsed = (int)(DateTime.Now - start).TotalMilliseconds;
+
+            if (string.IsNullOrWhiteSpace(bestMove))
+                bestMove = "0000"; // emergency fallback
+
+            LogSearch(bestMove, elapsed);
+
+            Console.WriteLine($"bestmove {bestMove}");
+            Console.Out.Flush();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("info string ERROR: " + ex.Message);
+            Console.WriteLine("bestmove 0000");
+            Console.Out.Flush();
+        }
+
+        isSearching = false;
     }
 
     private void HandleStop()
     {
-        if (searchCts != null)
-        {
-            searchCts.Cancel();
-        }
-    }
-
-    private void HandleQuit()
-    {
-        HandleStop();
-        Environment.Exit(0);
+        searchCts?.Cancel();
     }
 
     private void HandleSetOption(string[] parts)
     {
-        if (parts.Length < 5) return;
-        
-        for (int i = 1; i < parts.Length; i++)
+        for (int i = 0; i < parts.Length - 2; i++)
         {
-            if (parts[i].ToLower() == "name" && i + 1 < parts.Length)
+            if (parts[i] == "name")
             {
-                string optionName = parts[i + 1];
-                if (optionName.ToLower() == "simcount" && i + 2 < parts.Length)
+                string name = parts[i + 1].ToLower();
+
+                if (name == "simcount")
                 {
-                    numSimulations = int.Parse(parts[i + 2]);
+                    numSimulations = int.Parse(parts[^1]);
                     engine.SetSimulations(numSimulations);
                 }
-                else if (optionName.ToLower() == "temperature" && i + 2 < parts.Length)
+                else if (name == "temperature")
                 {
-                    temperature = int.Parse(parts[i + 2]);
+                    temperature = int.Parse(parts[^1]);
                     engine.SetTemperature(temperature);
                 }
             }
@@ -235,15 +222,15 @@ public class UciHandler
     {
         try
         {
-            string logPath = Path.Combine("C:\\Users\\prata\\agent01\\logs", "engine_log.txt");
-            
+            string logPath = @"C:\Users\prata\agent01\logs\engine_log.txt";
+
             var (policy, value) = evaluator.Evaluate(board);
-            string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] FEN: {board.GetFen()} | Best: {bestMove} | Value: {value:F3} | Time: {timeMs}ms\n";
-            
-            File.AppendAllText(logPath, logEntry);
+
+            string entry =
+                $"[{DateTime.Now}] FEN: {board.GetFen()} | Move: {bestMove} | Eval: {value:F3} | Time: {timeMs}ms\n";
+
+            File.AppendAllText(logPath, entry);
         }
-        catch
-        {
-        }
+        catch { }
     }
 }
