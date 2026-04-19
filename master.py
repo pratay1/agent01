@@ -6,6 +6,7 @@ import csv
 import json
 import subprocess
 import glob
+import random
 import traceback
 from datetime import datetime
 
@@ -26,6 +27,32 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = r"C:\Users\prata\agent01"
+# Standard starting FEN for "regular chess position"
+STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+# --- Multiprocessing worker globals ---
+_worker_network = None
+_worker_device = None
+
+def _init_worker(network_state_dict):
+    """Initialize each worker process with a copy of the network."""
+    global _worker_network, _worker_device
+    import torch
+    from src.network import create_network
+    # Build network on CPU
+    _worker_network = create_network()
+    _worker_network.load_state_dict(network_state_dict)
+    _worker_network.eval()
+    _worker_device = torch.device("cpu")
+
+def _play_game_worker(mcts_config, training_mode):
+    """Worker function for parallel game generation."""
+    global _worker_network
+    from src.self_play import play_game
+    # Run without move callback
+    return play_game(_worker_network, mcts_config, training_mode, max_think_time=0.05, move_callback=None)
+# Standard starting FEN for "regular chess position"
+STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 
 def save_checkpoint_and_export(network, trainer):
@@ -210,19 +237,22 @@ def run_training(args):
             return None
 
         logger.log_info("Printing configuration")
-        def on_move(info):
+        logger.log_info(f"Config: {args.simulations} sims, {args.games_per_epoch} games/epoch, parallel={args.parallel}")
+        
+        # Ask user at runtime if parallel training desired (if not overridden by flag)
+        use_parallel = args.parallel
+        if not use_parallel:
             try:
-                game_state['current_move'] = info.get('move_num', 0)
-                game_state['last_moves'] = info.get('last_moves', [])
-                game_state['sims'] = info.get('simulations', args.simulations)
-            except Exception as e:
-                logger.log_exception(e, "on_move callback")
-                game_state['current_move'] = 0
-                game_state['last_moves'] = []
-                game_state['sims'] = args.simulations
-
-        logger.log_info("Printing configuration")
-        logger.log_info(f"Config: {args.simulations} sims, {args.games_per_epoch} games/epoch")
+                resp = input("Run games in parallel? (y/n): ").strip().lower()
+                use_parallel = (resp == 'y' or resp == 'yes')
+            except (EOFError, KeyboardInterrupt):
+                print()  # newline
+                use_parallel = False
+        
+        if use_parallel:
+            logger.log_info(f"Parallel training enabled with {args.games_per_epoch} concurrent workers")
+            import multiprocessing
+            # Use the module-level _play_game_worker defined above
         
         logger.log_info("Starting main training loop")
         try:
@@ -234,71 +264,84 @@ def run_training(args):
                             logger.log_info("ESC key pressed, stopping training")
                             break
 
-                    if epoch < args.epochs_before_opening:
-                        training_mode = "midgame"
-                        game_state['mode'] = "Mid-game"
-                        mcts_config["temperature"] = 1.0
-                        logger.log_debug(f"Epoch {epoch}: Using midgame mode")
-                    else:
-                        if epoch % 4 == 0:
-                            training_mode = "opening"
-                            game_state['mode'] = "Opening"
-                            mcts_config["temperature"] = 1.5
-                            logger.log_debug(f"Epoch {epoch}: Using opening mode")
-                        else:
-                            training_mode = "midgame"
-                            game_state['mode'] = "Mid-game"
-                            mcts_config["temperature"] = 1.0
-                            logger.log_debug(f"Epoch {epoch}: Using midgame mode")
-
-                    game_state['current_move'] = 0
-                    game_state['last_moves'] = []
-                    game_state['game_result'] = "-"
-
                     epoch_start = time.time()
+                    total_games_start = total_games
 
-                    logger.log_info(f"Starting epoch {epoch} with {args.games_per_epoch} games")
-                    for g in range(args.games_per_epoch):
-                        try:
-                            if kb_hit() and get_key() == b'\x1b':
-                                logger.log_info("ESC key pressed during game generation, stopping training")
-                                raise KeyboardInterrupt()
+                    # --- Parallel game generation ---
+                    if use_parallel:
+                        # Prepare tasks: each game gets a random mode (70% midgame, 30% opening)
+                        tasks = []
+                        for _ in range(args.games_per_epoch):
+                            mode = "midgame" if random.random() < 0.7 else "opening"
+                            tasks.append((mcts_config, mode))
+                        
+                        # Run in parallel
+                        with multiprocessing.Pool(processes=min(args.games_per_epoch, multiprocessing.cpu_count())) as pool:
+                            results = pool.starmap(_play_game_worker, tasks)
+                        
+                        # Process results
+                        for states, policy_targets, value_targets, start_fen, game_result in results:
+                            if states:  # only add if game produced data
+                                buffer.add_game(states, policy_targets, value_targets)
+                                moves_history.append(len(states))
+                                total_games += 1
+                                game_state['games'] = total_games
+                                game_state['buffer_pct'] = buffer.fill_percentage()
+                                
+                                game_data = {
+                                    "epoch": epoch,
+                                    "start_fen": start_fen,
+                                    "result": game_result,
+                                    "move_count": len(states),
+                                }
+                                with open(game_log_path, 'a') as f:
+                                    f.write(json.dumps(game_data) + "\n")
+                    else:
+                        # --- Sequential game generation ---
+                        for g in range(args.games_per_epoch):
+                            try:
+                                if kb_hit() and get_key() == b'\x1b':
+                                    logger.log_info("ESC key pressed during game generation, stopping training")
+                                    raise KeyboardInterrupt()
 
-                            logger.log_debug(f"Starting game {g+1}/{args.games_per_epoch} in epoch {epoch}")
-                            states, policy_targets, value_targets, start_fen, game_result = play_game(
-                                network, mcts_config, training_mode,
-                                max_think_time=0.05,
-                                move_callback=on_move
-                            )
+                                # Randomly choose training mode per game: 70% midgame (random opening), 30% opening (standard start)
+                                training_mode = "midgame" if random.random() < 0.7 else "opening"
 
-                            logger.log_debug(f"Game {g+1} completed, adding to buffer")
-                            buffer.add_game(states, policy_targets, value_targets)
-                            
-                            moves_history.append(len(states))
-                            current_game_num = g + 1
+                                logger.log_debug(f"Starting game {g+1}/{args.games_per_epoch} in epoch {epoch} with mode={training_mode}")
+                                states, policy_targets, value_targets, start_fen, game_result = play_game(
+                                    network, mcts_config, training_mode,
+                                    max_think_time=0.05,
+                                    move_callback=None  # no live updates
+                                )
 
-                            game_state['game_result'] = "W" if game_result == 1 else "L" if game_result == -1 else "D"
+                                logger.log_debug(f"Game {g+1} completed, adding to buffer")
+                                buffer.add_game(states, policy_targets, value_targets)
+                                
+                                moves_history.append(len(states))
+                                
+                                game_state['game_result'] = "W" if game_result == 1 else "L" if game_result == -1 else "D"
 
-                            game_data = {
-                                "epoch": epoch,
-                                "start_fen": start_fen,
-                                "result": game_result,
-                                "move_count": len(states),
-                            }
-                            with open(game_log_path, 'a') as f:
-                                f.write(json.dumps(game_data) + "\n")
+                                game_data = {
+                                    "epoch": epoch,
+                                    "start_fen": start_fen,
+                                    "result": game_result,
+                                    "move_count": len(states),
+                                }
+                                with open(game_log_path, 'a') as f:
+                                    f.write(json.dumps(game_data) + "\n")
 
-                            total_games += 1
-                            game_state['games'] = total_games
-                            game_state['buffer_pct'] = buffer.fill_percentage()
+                                total_games += 1
+                                game_state['games'] = total_games
+                                game_state['buffer_pct'] = buffer.fill_percentage()
 
-                            logger.log_debug(f"Updated dashboard after game {g+1}")
-                        except Exception as e:
-                            logger.log_exception(e, f"game {g+1} in epoch {epoch}")
-                            # Continue with next game rather than stopping entire epoch
-                            continue
+                                logger.log_debug(f"Updated after game {g+1}")
+                            except Exception as e:
+                                logger.log_exception(e, f"game {g+1} in epoch {epoch}")
+                                continue
 
-                    logger.log_info(f"Completed epoch {epoch}, running training step")
+                    logger.log_info(f"Completed epoch {epoch} with {total_games - total_games_start} games, running training step")
+                    # Epoch training mode label for logging and CSV
+                    epoch_training_mode = "mixed (70% mid / 30% opening)"
                     losses = trainer.train_step()
                     epoch_elapsed = time.time() - epoch_start
 
@@ -324,7 +367,7 @@ def run_training(args):
                         writer.writerow([
                             epoch, datetime.now().isoformat(),
                             losses["policy_loss"], losses["value_loss"], losses["combined_loss"],
-                            total_games, current_elo, training_mode
+                            total_games, current_elo, epoch_training_mode
                         ])
 
                     checkpoint_path = os.path.join(BASE_DIR, "checkpoints", "checkpoint_latest.pt")
@@ -377,10 +420,12 @@ def main():
 
         logger.log_info("Starting ChessAI Training Engine")
         parser = argparse.ArgumentParser(description="Chess AI Training")
-        parser.add_argument("--epochs-before-opening", type=int, default=999)
         parser.add_argument("--simulations", type=int, default=200)
-        parser.add_argument("--games-per-epoch", type=int, default=32)
+        parser.add_argument("--games-per-epoch", type=int, default=5,
+                            help="Number of games to play per epoch (default: 5)")
         parser.add_argument("--resume", action="store_true")
+        parser.add_argument("--parallel", action="store_true",
+                            help="Run games in parallel using multiprocessing")
         args = parser.parse_args()
         
         logger.log_info(f"Arguments parsed: epochs_before_opening={args.epochs_before_opening}, simulations={args.simulations}, games_per_epoch={args.games_per_epoch}, resume={args.resume}")
