@@ -17,7 +17,7 @@ public class ExplosiveBehavior : BodyBehavior
     {
         if (body.HasExploded) return;
 
-        foreach (var other in world.Bodies)
+        foreach (var other in world.Bodies.ToList())
         {
             if (body == other) continue;
             if (Vector2.Distance(body.Position, other.Position) < body.Radius + other.Radius)
@@ -39,7 +39,7 @@ public class ExplosiveBehavior : BodyBehavior
                     debris.BodyType = BodyType.Fire;
                 }
 
-                foreach (var other2 in world.Bodies)
+                foreach (var other2 in world.Bodies.ToList())
                 {
                     if (body == other2) continue;
                     var dir = (other2.Position - body.Position).Normalized;
@@ -48,7 +48,7 @@ public class ExplosiveBehavior : BodyBehavior
                     other2.ApplyImpulse(dir * force * 50);
                 }
 
-                world.RemoveBody(body);
+                try { world.RemoveBody(body); } catch { }
                 break;
             }
         }
