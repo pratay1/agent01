@@ -49,7 +49,16 @@ public class RigidBody
         set => _acceleration = value;
     }
     public double Radius { get; set; }
-    public double Mass { get; set; }
+    private double _mass;
+    public double Mass
+    {
+        get => _mass;
+        set
+        {
+            _mass = value;
+            InverseMass = value > 0 ? 1.0 / value : 0;
+        }
+    }
     public double InverseMass { get; private set; }
     public double Restitution { get; set; }
     public double Angle
