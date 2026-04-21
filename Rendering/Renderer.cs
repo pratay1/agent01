@@ -36,7 +36,6 @@ public class Renderer
     public Renderer(Canvas canvas)
     {
         _canvas = canvas;
-        _canvas.Background = new SolidColorBrush(Color.FromRgb(20, 20, 25));
     }
 
     public void UpdateBodies(IEnumerable<RigidBody> bodies)
@@ -258,8 +257,7 @@ public class Renderer
         line.Y1 = y;
         line.X2 = x + body.Velocity.X * VelocityScale;
         line.Y2 = y + body.Velocity.Y * VelocityScale;
-        double speed = body.Velocity.Length;
-        line.Opacity = System.Math.Min(0.2 + speed * 0.0005, 0.5);
+        line.Opacity = 0.3;
     }
 
     public void ClearDebugShapes()

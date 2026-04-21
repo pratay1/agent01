@@ -53,22 +53,12 @@ public class PhysicsWorld
         _forceManager = new ForceManager();
     }
 
-    public RigidBody CreateBody(Vector2 position, double radius, double mass = 1.0, double restitution = 0.6)
-    {
-        var body = CreateBody(position, radius, mass, restitution, BodyType.Normal);
-        return body;
-    }
-
-    public RigidBody CreateBody(Vector2 position, double radius, double mass, double restitution, BodyType bodyType)
+    public RigidBody CreateBody(Vector2 position, double radius, double mass, double restitution, BodyType bodyType = BodyType.Normal)
     {
         var behavior = BodyBehaviorFactory.Get(bodyType);
-        var body = new RigidBody(position, (float)behavior.DefaultRadius, (float)behavior.DefaultMass, (float)behavior.DefaultRestitution, bodyType);
-        body.Radius = (float)radius > 0 ? (float)radius : (float)behavior.DefaultRadius;
-        body.Mass = (float)mass > 0 ? (float)mass : (float)behavior.DefaultMass;
-        body.Restitution = (float)restitution > 0 ? (float)restitution : (float)behavior.DefaultRestitution;
+        var body = new RigidBody(position, radius, mass, restitution, bodyType);
         
         behavior.OnCreate(body);
-        
         _bodies.Add(body);
         return body;
     }

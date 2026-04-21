@@ -1,90 +1,70 @@
+using System.Windows.Threading;
+
 namespace PhysicsSandbox.Engine;
 
 public class GameLoop
 {
     private readonly Action<double> _update;
     private readonly Action<double> _render;
-    private readonly Action _lateUpdate;
-
-    private double _accumulator;
+    private readonly DispatcherTimer _timer;
     private readonly double _fixedDeltaTime;
-    private double _deltaTime;
+    
+    private double _accumulator;
+    private double _lastTime;
     private bool _isRunning;
-    private bool _wasPaused;
-    private int _frameCount;
-    private double _time;
 
-    public double DeltaTime => _deltaTime;
-    public double Time => _time;
-    public int FrameCount => _frameCount;
-    public bool IsRunning => _isRunning;
     public double TargetFPS => 1.0 / _fixedDeltaTime;
+    public bool IsRunning => _isRunning;
 
-    public event Action? OnFixedUpdate;
-    public event Action? OnLateUpdate;
-
-    public GameLoop(Action<double> update, Action<double> render, Action? lateUpdate = null, double targetFps = 60.0)
+    public GameLoop(Action<double> update, Action<double> render, double targetFps = 60.0)
     {
         _update = update ?? throw new ArgumentNullException(nameof(update));
         _render = render ?? throw new ArgumentNullException(nameof(render));
-
-        _lateUpdate = () =>
-        {
-            lateUpdate?.Invoke();
-            OnLateUpdate?.Invoke();
-        };
-
+        
         _fixedDeltaTime = 1.0 / targetFps;
-        _accumulator = 0;
-        _deltaTime = 0;
-        _frameCount = 0;
-        _isRunning = false;
+        
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(1)
+        };
+        _timer.Tick += (s, e) => Tick();
     }
 
     public void Start()
     {
         _isRunning = true;
         _accumulator = 0;
-        _time = 0;
-        _frameCount = 0;
+        _lastTime = DateTime.Now.TimeOfDay.TotalSeconds;
+        _timer.Start();
     }
 
     public void Stop()
     {
         _isRunning = false;
+        _timer.Stop();
     }
 
-    public void Tick(double deltaTime)
+    private void Tick()
     {
         if (!_isRunning) return;
 
-        _deltaTime = System.Math.Min(deltaTime, 0.25);
-        _accumulator += _deltaTime;
-        _time += _deltaTime;
+        double currentTime = DateTime.Now.TimeOfDay.TotalSeconds;
+        double frameTime = currentTime - _lastTime;
+        _lastTime = currentTime;
 
+        // Cap max frame time to prevent spiral of death
+        if (frameTime > 0.25) frameTime = 0.25;
+        
+        _accumulator += frameTime;
+
+        // Fixed timestep updates
         while (_accumulator >= _fixedDeltaTime)
         {
             _update(_fixedDeltaTime);
-            OnFixedUpdate?.Invoke();
             _accumulator -= _fixedDeltaTime;
         }
 
-        _render(_deltaTime);
-        _lateUpdate();
-        _frameCount++;
-    }
-
-    public double GetInterpolation()
-    {
-        return _accumulator / _fixedDeltaTime;
-    }
-
-    public void SetPaused(bool paused)
-    {
-        if (_wasPaused && !paused)
-        {
-            _accumulator = 0;
-        }
-        _wasPaused = paused;
+        // Render
+        _render(frameTime);
     }
 }
