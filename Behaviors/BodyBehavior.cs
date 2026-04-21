@@ -37,7 +37,9 @@ public static class BodyBehaviorFactory
         { BodyType.Plasma, new PlasmaBehavior() },
         { BodyType.BlackHole, new BlackHoleBehavior() },
         { BodyType.Lightning, new LightningBehavior() },
-        { BodyType.Fire, new FireBehavior() }
+        { BodyType.Fire, new FireBehavior() },
+        { BodyType.Angel, new AngelBehavior() },
+        { BodyType.Molly, new MollyBehavior() }
     };
 
     public static BodyBehavior Get(BodyType type) => _behaviors[type];

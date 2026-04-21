@@ -19,7 +19,9 @@ public enum BodyType
     Plasma,
     BlackHole,
     Lightning,
-    Fire
+    Fire,
+    Angel,
+    Molly
 }
 
 public class RigidBody
@@ -163,6 +165,8 @@ public static class BodyTypeExtensions
         BodyType.BlackHole => "Sucks in everything & grows!",
         BodyType.Lightning => "Zaps nearby objects with electric force!",
         BodyType.Fire => "Rising flames - disappears after 3 seconds",
+        BodyType.Angel => "Flies periodically - gentle & light",
+        BodyType.Molly => "Explodes on contact unless Angel is nearby - attracts to Angel and latches",
         _ => "Unknown body type"
     };
 
@@ -184,6 +188,8 @@ public static class BodyTypeExtensions
         BodyType.BlackHole => "#0D0D0D",
         BodyType.Lightning => "#FF9800",
         BodyType.Fire => "#FF5722",
+        BodyType.Angel => "#FFFFFF",
+        BodyType.Molly => "#FF4081",
         _ => "#4FC3F7"
     };
 }
