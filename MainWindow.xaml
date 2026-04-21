@@ -5,6 +5,10 @@
         Background="#121212" WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
@@ -12,7 +16,7 @@
         </Grid.RowDefinitions>
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Grid.Column="1" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,0,0,1">
             <DockPanel Margin="16,0">
                 <TextBlock Text="Physics Sandbox" Foreground="#ffffff" FontSize="14" 
                            VerticalAlignment="Center" FontWeight="Medium"/>
@@ -45,11 +49,11 @@
         </Border>
         
         <!-- Game Canvas -->
-        <Canvas x:Name="GameCanvas" Grid.Row="1" ClipToBounds="True"
+        <Canvas x:Name="GameCanvas" Grid.Row="1" Grid.Column="1" ClipToBounds="True"
                 Background="#121212"/>
         
         <!-- Footer -->
-        <Border Grid.Row="2" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,1,0,0" Padding="0,4">
+        <Border Grid.Row="2" Grid.Column="1" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,1,0,0" Padding="0,4">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Foreground="#555555" FontSize="11" Margin="0,0,30,0">
                     LMB: Spawn/Drag | RMB: Explode | SPACE: Pause | C: Clear | G: Gravity | W: Wind | +/-: Speed
@@ -58,6 +62,86 @@
                     [1] Normal  [2] Bouncy  [3] Heavy  [4] Explosive  [5] Gravity Well  [6] Black Hole
                 </TextBlock>
             </StackPanel>
+        </Border>
+        <!-- Sidebar -->
+        <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,0,1,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                <StackPanel>
+                    <TextBlock Text="BODY TYPES" Foreground="#888888" FontSize="10" FontWeight="Medium" Margin="0,8,0,12"/>
+                    
+                    <Button x:Name="BtnNormal" Click="BodyTypeButton_Click" Tag="Normal"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnBouncy" Click="BodyTypeButton_Click" Tag="Bouncy"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnHeavy" Click="BodyTypeButton_Click" Tag="Heavy"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnExplosive" Click="BodyTypeButton_Click" Tag="Explosive"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnRepulsor" Click="BodyTypeButton_Click" Tag="Repulsor"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnGravityWell" Click="BodyTypeButton_Click" Tag="GravityWell"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnAntiGravity" Click="BodyTypeButton_Click" Tag="AntiGravity"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnFreezer" Click="BodyTypeButton_Click" Tag="Freezer"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnTurbo" Click="BodyTypeButton_Click" Tag="Turbo"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnPhantom" Click="BodyTypeButton_Click" Tag="Phantom"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnSpike" Click="BodyTypeButton_Click" Tag="Spike"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnGlue" Click="BodyTypeButton_Click" Tag="Glue"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnPlasma" Click="BodyTypeButton_Click" Tag="Plasma"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnBlackHole" Click="BodyTypeButton_Click" Tag="BlackHole"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnLightning" Click="BodyTypeButton_Click" Tag="Lightning"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnFire" Click="BodyTypeButton_Click" Tag="Fire"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnAngel" Click="BodyTypeButton_Click" Tag="Angel"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                    
+                    <Button x:Name="BtnMolly" Click="BodyTypeButton_Click" Tag="Molly"
+                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </Window>

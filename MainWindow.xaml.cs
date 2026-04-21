@@ -28,8 +28,20 @@ public partial class MainWindow : Window
         { BodyType.Bouncy, ("Bouncy", "#81C784") },
         { BodyType.Heavy, ("Heavy", "#FFB74D") },
         { BodyType.Explosive, ("Explosive", "#EF5350") },
+        { BodyType.Repulsor, ("Repulsor", "#BA68C8") },
         { BodyType.GravityWell, ("Gravity Well", "#26C6DA") },
-        { BodyType.BlackHole, ("Black Hole", "#1A1A1A") }
+        { BodyType.AntiGravity, ("Anti Gravity", "#00BCD4") },
+        { BodyType.Freezer, ("Freezer", "#81D4FA") },
+        { BodyType.Turbo, ("Turbo", "#FFEB3B") },
+        { BodyType.Phantom, ("Phantom", "#9575CD") },
+        { BodyType.Spike, ("Spike", "#F44336") },
+        { BodyType.Glue, ("Glue", "#AED581") },
+        { BodyType.Plasma, ("Plasma", "#E91E63") },
+        { BodyType.BlackHole, ("Black Hole", "#1A1A1A") },
+        { BodyType.Lightning, ("Lightning", "#FF9800") },
+        { BodyType.Fire, ("Fire", "#FF5722") },
+        { BodyType.Angel, ("Angel", "#FFFFFF") },
+        { BodyType.Molly, ("Molly", "#FF4081") }
     };
 
     public MainWindow()
@@ -51,6 +63,7 @@ public partial class MainWindow : Window
         _gameLoop = new GameLoop(OnUpdate, OnRender, 60.0);
 
         SetupInput();
+        InitializeBodyTypeButtons();
         SelectBody(BodyType.Normal);
         StartGame();
     }
@@ -66,6 +79,43 @@ public partial class MainWindow : Window
         var (name, colorHex) = _bodyInfo[_selectedBodyType];
         SelectedBodyName.Text = name;
         SelectedBodyColor.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
+        
+        // Update button states
+        foreach (BodyType type in Enum.GetValues<BodyType>())
+        {
+            var btnName = $"Btn{type}";
+            var btn = FindName(btnName) as System.Windows.Controls.Button;
+            if (btn != null)
+            {
+                btn.Background = type == _selectedBodyType 
+                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(_bodyInfo[type].Color)) 
+                    : new SolidColorBrush(Color.FromRgb(31, 31, 31));
+            }
+        }
+    }
+
+    private void InitializeBodyTypeButtons()
+    {
+        foreach (BodyType type in Enum.GetValues<BodyType>())
+        {
+            var btnName = $"Btn{type}";
+            var btn = FindName(btnName) as System.Windows.Controls.Button;
+            if (btn != null)
+            {
+                btn.Content = _bodyInfo[type].Name;
+            }
+        }
+    }
+
+    private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is string tag)
+        {
+            if (Enum.TryParse<BodyType>(tag, out var type))
+            {
+                SelectBody(type);
+            }
+        }
     }
 
     private void SetupInput()
@@ -78,15 +128,27 @@ public partial class MainWindow : Window
                 case Key.Space: TogglePause(); break;
                 case Key.C: ClearWorld(); break;
                 case Key.G: ToggleGravity(); break;
-                case Key.W: ToggleWind(); break;
+                case Key.OemComma: ToggleWind(); break;
                 case Key.OemPlus: _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1); break;
                 case Key.OemMinus: _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1); break;
                 case Key.D1: SelectBody(BodyType.Normal); break;
                 case Key.D2: SelectBody(BodyType.Bouncy); break;
                 case Key.D3: SelectBody(BodyType.Heavy); break;
                 case Key.D4: SelectBody(BodyType.Explosive); break;
-                case Key.D5: SelectBody(BodyType.GravityWell); break;
-                case Key.D6: SelectBody(BodyType.BlackHole); break;
+                case Key.D5: SelectBody(BodyType.Repulsor); break;
+                case Key.D6: SelectBody(BodyType.GravityWell); break;
+                case Key.D7: SelectBody(BodyType.AntiGravity); break;
+                case Key.D8: SelectBody(BodyType.Freezer); break;
+                case Key.D9: SelectBody(BodyType.Turbo); break;
+                case Key.D0: SelectBody(BodyType.Phantom); break;
+                case Key.Q: SelectBody(BodyType.Spike); break;
+                case Key.W: SelectBody(BodyType.Glue); break;
+                case Key.E: SelectBody(BodyType.Plasma); break;
+                case Key.R: SelectBody(BodyType.BlackHole); break;
+                case Key.T: SelectBody(BodyType.Lightning); break;
+                case Key.Y: SelectBody(BodyType.Fire); break;
+                case Key.U: SelectBody(BodyType.Angel); break;
+                case Key.I: SelectBody(BodyType.Molly); break;
             }
         };
 
