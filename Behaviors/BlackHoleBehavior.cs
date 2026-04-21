@@ -19,11 +19,13 @@ public class BlackHoleBehavior : BodyBehavior
         const float suckStrength = 20000f;
 
         var bodiesToRemove = new List<RigidBody>();
-        
-        foreach (var other in world.Bodies.ToList())
+        var bodies = world.Bodies;
+
+        for (int i = 0; i < bodies.Count; i++)
         {
+            var other = bodies[i];
             if (body == other || other.IsStatic) continue;
-            
+
             var direction = body.Position - other.Position;
             var distance = (float)direction.Length;
 
@@ -35,8 +37,8 @@ public class BlackHoleBehavior : BodyBehavior
 
                 if (distance < body.Radius + other.Radius + 30)
                 {
-                    other.Radius = System.Math.Max(3, other.Radius * 0.998);
-                    if (other.Radius <= 3)
+                    other.Radius *= 0.998;
+                    if (other.Radius < 2)
                     {
                         bodiesToRemove.Add(other);
                     }

@@ -17,19 +17,20 @@ public class ExplosiveBehavior : BodyBehavior
     {
         if (body.HasExploded) return;
 
-        foreach (var other in world.Bodies.ToList())
+        var bodies = world.Bodies;
+        for (int i = 0; i < bodies.Count; i++)
         {
+            var other = bodies[i];
             if (body == other) continue;
             if (Vector2.Distance(body.Position, other.Position) < body.Radius + other.Radius)
             {
                 body.HasExploded = true;
                 world.ForceManager.Explosion.Trigger(body.Position);
 
-                var rand = new Random();
-                for (int i = 0; i < 12; i++)
+                for (int j = 0; j < 12; j++)
                 {
-                    float angle = i * (float)System.Math.PI * 2 / 12;
-                    float speed = 300f + rand.Next(200);
+                    float angle = j * (float)System.Math.PI * 2 / 12;
+                    float speed = 300f + (float)(_rand.NextDouble() * 200);
                     var vel = new Vector2(
                         (float)System.Math.Cos(angle) * speed,
                         (float)System.Math.Sin(angle) * speed);
@@ -39,8 +40,9 @@ public class ExplosiveBehavior : BodyBehavior
                     debris.BodyType = BodyType.Fire;
                 }
 
-                foreach (var other2 in world.Bodies.ToList())
+                for (int j = 0; j < bodies.Count; j++)
                 {
+                    var other2 = bodies[j];
                     if (body == other2) continue;
                     var dir = (other2.Position - body.Position).Normalized;
                     var dist = (float)Vector2.Distance(body.Position, other2.Position);
@@ -53,4 +55,6 @@ public class ExplosiveBehavior : BodyBehavior
             }
         }
     }
+
+    private static readonly Random _rand = new Random();
 }

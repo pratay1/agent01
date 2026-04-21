@@ -23,8 +23,10 @@ public class MollyBehavior : BodyBehavior
         RigidBody? nearestAngel = null;
         double closestDist = double.MaxValue;
 
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies;
+        for (int i = 0; i < bodies.Count; i++)
         {
+            var other = bodies[i];
             if (other.BodyType == BodyType.Angel && other != body)
             {
                 double dist = Vector2.Distance(body.Position, other.Position);
@@ -41,8 +43,7 @@ public class MollyBehavior : BodyBehavior
             // Check if already latched
             if (body.LatchedPartnerId.HasValue)
             {
-                var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
-                // Verify partner is still valid and is an Angel
+                var partner = FindBodyById(world, body.LatchedPartnerId.Value);
                 if (partner == null || partner.BodyType != BodyType.Angel)
                 {
                     body.LatchedPartnerId = null;
@@ -51,8 +52,9 @@ public class MollyBehavior : BodyBehavior
                 {
                     // Check for third body approaching to break latch
                     bool thirdBodyNear = false;
-                    foreach (var other in world.Bodies)
+                    for (int j = 0; j < bodies.Count; j++)
                     {
+                        var other = bodies[j];
                         if (other == body || other == partner) continue;
                         double dist = Vector2.Distance(body.Position, other.Position);
                         if (dist < body.Radius + other.Radius + 20)
@@ -64,18 +66,18 @@ public class MollyBehavior : BodyBehavior
 
                     if (thirdBodyNear)
                     {
-                        // Break latch
                         partner.LatchedPartnerId = null;
                         body.LatchedPartnerId = null;
                     }
                     else
                     {
-                        // Maintain latch: sync velocity and position
+                        // Maintain latch: sync velocity and position offset correctly
                         body.Velocity = partner.Velocity;
-                        var dir = (body.Position - partner.Position).Normalized;
-                        if (dir.LengthSquared < 1e-6)
-                            dir = new Vector2(1, 0);
-                        body.Position = partner.Position + dir * (float)(body.Radius + partner.Radius);
+                        var dirFromPartner = (body.Position - partner.Position).Normalized;
+                        if (dirFromPartner.LengthSquared < 1e-6)
+                            dirFromPartner = new Vector2(1, 0);
+                        // Position body at partner's location plus offset away from partner
+                        body.Position = partner.Position + dirFromPartner * (body.Radius + partner.Radius);
                         return;
                     }
                 }
@@ -95,18 +97,18 @@ public class MollyBehavior : BodyBehavior
         }
         else // No Angel nearby
         {
-            // If was latched, clear latch
             if (body.LatchedPartnerId.HasValue)
             {
-                var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
+                var partner = FindBodyById(world, body.LatchedPartnerId.Value);
                 if (partner != null)
                     partner.LatchedPartnerId = null;
                 body.LatchedPartnerId = null;
             }
 
-            // Check collision with any other body (including other Mollys)
-            foreach (var other in world.Bodies)
+            // Check collision with any other body
+            for (int j = 0; j < bodies.Count; j++)
             {
+                var other = bodies[j];
                 if (body == other) continue;
 
                 double dist = Vector2.Distance(body.Position, other.Position);
@@ -119,12 +121,22 @@ public class MollyBehavior : BodyBehavior
         }
     }
 
+    private static RigidBody? FindBodyById(PhysicsWorld world, int id)
+    {
+        var bodies = world.Bodies;
+        for (int i = 0; i < bodies.Count; i++)
+        {
+            if (bodies[i].Id == id) return bodies[i];
+        }
+        return null;
+    }
+
     private void TriggerExplosion(RigidBody body, PhysicsWorld world)
     {
         // Clear any existing latch
         if (body.LatchedPartnerId.HasValue)
         {
-            var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
+            var partner = FindBodyById(world, body.LatchedPartnerId.Value);
             if (partner != null)
                 partner.LatchedPartnerId = null;
             body.LatchedPartnerId = null;
@@ -133,11 +145,10 @@ public class MollyBehavior : BodyBehavior
         body.HasExploded = true;
         world.ForceManager.Explosion.Trigger(body.Position);
 
-        var rand = new Random();
         for (int i = 0; i < 10; i++)
         {
             float angle = i * (float)System.Math.PI * 2 / 10;
-            float speed = 250f + rand.Next(150);
+            float speed = 250f + (float)(_rand.NextDouble() * 150);
             var vel = new Vector2(
                 (float)System.Math.Cos(angle) * speed,
                 (float)System.Math.Sin(angle) * speed);
@@ -147,8 +158,10 @@ public class MollyBehavior : BodyBehavior
             debris.BodyType = BodyType.Fire;
         }
 
-        foreach (var other2 in world.Bodies)
+        var bodies = world.Bodies;
+        for (int j = 0; j < bodies.Count; j++)
         {
+            var other2 = bodies[j];
             if (body == other2) continue;
             var dir = (other2.Position - body.Position).Normalized;
             var dist = (float)Vector2.Distance(body.Position, other2.Position);
@@ -158,4 +171,6 @@ public class MollyBehavior : BodyBehavior
 
         try { world.RemoveBody(body); } catch { }
     }
+
+    private static readonly Random _rand = new Random();
 }

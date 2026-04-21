@@ -49,15 +49,15 @@ public static class Collision
     public static List<Manifold> DetectAll(List<RigidBody> bodies)
     {
         List<Manifold> manifolds = new();
-        
-        // Create snapshot to prevent concurrent modification exceptions
-        var bodiesSnapshot = bodies.ToList();
 
-        for (int i = 0; i < bodiesSnapshot.Count; i++)
+        int count = bodies.Count;
+        for (int i = 0; i < count; i++)
         {
-            for (int j = i + 1; j < bodiesSnapshot.Count; j++)
+            var a = bodies[i];
+            for (int j = i + 1; j < count; j++)
             {
-                var manifold = DetectCircleCircle(bodiesSnapshot[i], bodiesSnapshot[j]);
+                var b = bodies[j];
+                var manifold = DetectCircleCircle(a, b);
                 if (manifold != null)
                 {
                     manifolds.Add(manifold);

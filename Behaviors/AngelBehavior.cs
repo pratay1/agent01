@@ -20,22 +20,25 @@ public class AngelBehavior : BodyBehavior
     {
         body.FlyTimer += dt;
 
-        if (!body.IsFlying && body.FlyTimer >= _flyInterval)
+        if (!body.IsFlying)
         {
-            body.IsFlying = true;
-            body.FlyTimer = 0;
+            if (body.FlyTimer >= _flyInterval)
+            {
+                body.IsFlying = true;
+            }
         }
-
-        if (body.IsFlying && body.FlyTimer >= _flyDuration)
+        else
         {
-            body.IsFlying = false;
-            body.FlyTimer = 0;
+            if (body.FlyTimer >= _flyDuration)
+            {
+                body.IsFlying = false;
+                body.FlyTimer = 0;
+            }
         }
 
         if (body.IsFlying)
         {
             body.ApplyForce(new Vector2(0, -1800));
-            body.ApplyForce(new Vector2(0, -300));
         }
     }
 }

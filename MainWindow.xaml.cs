@@ -14,8 +14,8 @@ public partial class MainWindow : Window
     private readonly Renderer _renderer;
     private readonly GameLoop _gameLoop;
 
-    private double _canvasWidth = 1280;
-    private double _canvasHeight = 680; // Subtract bottom bar height
+    private double _canvasWidth;
+    private double _canvasHeight;
     
     private BodyType _selectedBodyType = BodyType.Normal;
     private RigidBody? _grabbedBody;
@@ -58,14 +58,38 @@ public partial class MainWindow : Window
             throw;
         }
 
+        // Dynamic canvas size tracking - starts game when valid size is available
+        GameCanvas.SizeChanged += (s, e) => UpdateCanvasSize();
+        // Also call initially in case size is already valid
+        Loaded += (s, e) => UpdateCanvasSize();
+
         _world = new PhysicsWorld();
-        _renderer = new Renderer(GameCanvas);
+        _renderer = new Renderer();
+        GameCanvas.Renderer = _renderer;
         _gameLoop = new GameLoop(OnUpdate, OnRender, 60.0);
 
         SetupInput();
         InitializeBodyTypeButtons();
         SelectBody(BodyType.Normal);
-        StartGame();
+    }
+
+    private bool _gameStarted = false;
+
+    private void UpdateCanvasSize()
+    {
+        if (GameCanvas == null) return;
+        _canvasWidth = GameCanvas.ActualWidth;
+        _canvasHeight = GameCanvas.ActualHeight;
+        
+        if (_canvasWidth > 0 && _canvasHeight > 0)
+        {
+            _world.SetBoundaries(0, _canvasWidth, _canvasHeight);
+            if (!_gameStarted)
+            {
+                _gameStarted = true;
+                StartGame();
+            }
+        }
     }
 
     private void SelectBody(BodyType type)
@@ -195,7 +219,6 @@ public partial class MainWindow : Window
     private void StartGame()
     {
         _gameLoop.Start();
-        _world.SetBoundaries(0, _canvasWidth, _canvasHeight);
 
         // Spawn initial bodies
         for (int i = 0; i < 3; i++)
@@ -204,11 +227,13 @@ public partial class MainWindow : Window
 
     private void SpawnRandomBody()
     {
+        var behavior = Behaviors.BodyBehaviorFactory.Get(BodyType.Normal);
         double x = 100 + Random.Shared.NextDouble() * (_canvasWidth - 200);
         double y = 50 + Random.Shared.NextDouble() * 150;
-        double radius = 10 + Random.Shared.NextDouble() * 25;
-        double mass = radius * 0.5 + Random.Shared.NextDouble() * 5;
-        _world.CreateBody(new Vector2(x, y), radius, mass, 0.3 + Random.Shared.NextDouble() * 0.5);
+        double radius = behavior.DefaultRadius + Random.Shared.NextDouble() * 5;
+        double mass = behavior.DefaultMass + Random.Shared.NextDouble() * 3;
+        double restitution = behavior.DefaultRestitution + (Random.Shared.NextDouble() - 0.5) * 0.2;
+        _world.CreateBody(new Vector2(x, y), radius, mass, System.Math.Clamp(restitution, 0.1, 0.9));
     }
 
     private void SpawnBody(Point position)
@@ -231,7 +256,8 @@ public partial class MainWindow : Window
 
     private void OnRender(double dt)
     {
-        _renderer.UpdateBodies(_world.Bodies, dt);
+        _renderer.Update(_world.Bodies, dt);
+        GameCanvas.InvalidateVisual();
         UpdateStatus();
     }
 
@@ -251,7 +277,11 @@ public partial class MainWindow : Window
 
     private void PauseButton_Click(object sender, RoutedEventArgs e) => TogglePause();
     private void ClearButton_Click(object sender, RoutedEventArgs e) => ClearWorld();
-    private void ClearWorld() => _world.Clear();
+    private void ClearWorld()
+    {
+        _world.Clear();
+        _renderer.Clear();
+    }
     private void ToggleGravity() => _world.ToggleGravityDirection();
     private void ToggleWind() 
     { 

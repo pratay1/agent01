@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows.Threading;
 
 namespace PhysicsSandbox.Engine;

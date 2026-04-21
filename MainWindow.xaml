@@ -1,6 +1,7 @@
 <Window x:Class="PhysicsSandbox.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PhysicsSandbox"
         Title="Physics Sandbox" Height="800" Width="1300"
         Background="#121212" WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
@@ -49,7 +50,7 @@
         </Border>
         
         <!-- Game Canvas -->
-        <Canvas x:Name="GameCanvas" Grid.Row="1" Grid.Column="1" ClipToBounds="True"
+        <local:PhysicsCanvas x:Name="GameCanvas" Grid.Row="1" Grid.Column="1" ClipToBounds="True"
                 Background="#121212"/>
         
         <!-- Footer -->
@@ -57,9 +58,6 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Foreground="#555555" FontSize="11" Margin="0,0,30,0">
                     LMB: Spawn/Drag | RMB: Explode | SPACE: Pause | C: Clear | G: Gravity | W: Wind | +/-: Speed
-                </TextBlock>
-                <TextBlock Foreground="#666666" FontSize="11">
-                    [1] Normal  [2] Bouncy  [3] Heavy  [4] Explosive  [5] Gravity Well  [6] Black Hole
                 </TextBlock>
             </StackPanel>
         </Border>
