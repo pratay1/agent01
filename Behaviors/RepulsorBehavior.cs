@@ -18,7 +18,8 @@ public class RepulsorBehavior : BodyBehavior
         const float repulsionRadius = 200f;
         const float repulsionStrength = 8000f;
 
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             

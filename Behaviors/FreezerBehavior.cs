@@ -15,7 +15,8 @@ public class FreezerBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot to avoid concurrent modification
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             

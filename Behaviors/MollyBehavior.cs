@@ -43,8 +43,7 @@ public class MollyBehavior : BodyBehavior
             // Check if already latched
             if (body.LatchedPartnerId.HasValue)
             {
-                var partner = FindBodyById(world, body.LatchedPartnerId.Value);
-                if (partner == null || partner.BodyType != BodyType.Angel)
+                if (!world.TryGetBodyById(body.LatchedPartnerId.Value, out var partner) || partner.BodyType != BodyType.Angel)
                 {
                     body.LatchedPartnerId = null;
                 }
@@ -71,23 +70,19 @@ public class MollyBehavior : BodyBehavior
                     }
                     else
                     {
-                        // Maintain latch: sync velocity and position offset correctly
                         body.Velocity = partner.Velocity;
                         var dirFromPartner = (body.Position - partner.Position).Normalized;
                         if (dirFromPartner.LengthSquared < 1e-6)
                             dirFromPartner = new Vector2(1, 0);
-                        // Position body at partner's location plus offset away from partner
                         body.Position = partner.Position + dirFromPartner * (body.Radius + partner.Radius);
                         return;
                     }
                 }
             }
 
-            // Attraction force towards Angel
             var dirToAngel = (nearestAngel.Position - body.Position).Normalized;
             body.ApplyForce(dirToAngel * 800);
 
-            // If very close, latch
             if (Vector2.Distance(body.Position, nearestAngel.Position) < body.Radius + nearestAngel.Radius + 5)
             {
                 body.LatchedPartnerId = nearestAngel.Id;
@@ -95,17 +90,17 @@ public class MollyBehavior : BodyBehavior
                 body.Velocity = nearestAngel.Velocity;
             }
         }
-        else // No Angel nearby
+        else
         {
             if (body.LatchedPartnerId.HasValue)
             {
-                var partner = FindBodyById(world, body.LatchedPartnerId.Value);
-                if (partner != null)
+                if (world.TryGetBodyById(body.LatchedPartnerId.Value, out var partner))
+                {
                     partner.LatchedPartnerId = null;
+                }
                 body.LatchedPartnerId = null;
             }
 
-            // Check collision with any other body
             for (int j = 0; j < bodies.Count; j++)
             {
                 var other = bodies[j];
@@ -119,26 +114,13 @@ public class MollyBehavior : BodyBehavior
                 }
             }
         }
-    }
-
-    private static RigidBody? FindBodyById(PhysicsWorld world, int id)
-    {
-        var bodies = world.Bodies;
-        for (int i = 0; i < bodies.Count; i++)
-        {
-            if (bodies[i].Id == id) return bodies[i];
         }
-        return null;
-    }
 
-    private void TriggerExplosion(RigidBody body, PhysicsWorld world)
+        private void TriggerExplosion(RigidBody body, PhysicsWorld world)
     {
-        // Clear any existing latch
-        if (body.LatchedPartnerId.HasValue)
+        if (body.LatchedPartnerId.HasValue && world.TryGetBodyById(body.LatchedPartnerId.Value, out var partner))
         {
-            var partner = FindBodyById(world, body.LatchedPartnerId.Value);
-            if (partner != null)
-                partner.LatchedPartnerId = null;
+            partner.LatchedPartnerId = null;
             body.LatchedPartnerId = null;
         }
 

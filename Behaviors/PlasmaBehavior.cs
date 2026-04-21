@@ -18,7 +18,8 @@ public class PlasmaBehavior : BodyBehavior
         const float plasmaRadius = 150f;
         const float plasmaStrength = 4000f;
 
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             

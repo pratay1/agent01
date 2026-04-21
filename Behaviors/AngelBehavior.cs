@@ -25,6 +25,7 @@ public class AngelBehavior : BodyBehavior
             if (body.FlyTimer >= _flyInterval)
             {
                 body.IsFlying = true;
+                body.FlyTimer = 0; // Reset timer when flight starts
             }
         }
         else

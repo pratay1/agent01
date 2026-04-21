@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using PhysicsSandbox.Behaviors;
 using PhysicsSandbox.Math;
 
@@ -6,6 +7,8 @@ namespace PhysicsSandbox.Physics;
 public class PhysicsWorld
 {
     private readonly List<RigidBody> _bodies = new();
+    private readonly Dictionary<int, RigidBody> _bodyMap = new();
+    private readonly HashSet<int> _removedIds = new();
     private readonly ForceManager _forceManager;
     private Vector2 _gravity = Vector2.Down * 980;
     private double _timeScale = 1.0;
@@ -60,17 +63,24 @@ public class PhysicsWorld
         
         behavior.OnCreate(body);
         _bodies.Add(body);
+        _bodyMap[body.Id] = body;
         return body;
     }
 
     public void RemoveBody(RigidBody body)
     {
-        _bodies.Remove(body);
+        if (_bodies.Remove(body))
+        {
+            _bodyMap.Remove(body.Id);
+            _removedIds.Add(body.Id);
+        }
     }
 
     public void Clear()
     {
         _bodies.Clear();
+        _bodyMap.Clear();
+        _removedIds.Clear();
         RigidBody.ResetIdCounter();
     }
 
@@ -87,27 +97,39 @@ public class PhysicsWorld
         double scaledDt = dt * _timeScale;
         scaledDt = System.Math.Min(scaledDt, 0.05); // Max 50ms per physics step
 
-        ApplyForces(scaledDt);
-        Integrate(scaledDt);
-        HandleSpecialBodyBehaviors(scaledDt);
-        SolveCollisions();
-        SolveBoundaryCollisions();
-        ValidateBodies();
-    }
+        // Clear removal tracking from previous frame
+        _removedIds.Clear();
 
-    private void HandleSpecialBodyBehaviors(double dt)
-    {
-        for (int i = 0; i < _bodies.Count; i++)
+        // 1. Apply forces (gravity, wind, explosions)
+        ApplyForces(scaledDt);
+
+        // 2. Behavior updates - MUST come BEFORE integration so forces apply this frame
+        // Use snapshot to avoid concurrent modification issues
+        var bodiesSnapshot = _bodies.ToList();
+        foreach (var body in bodiesSnapshot)
         {
-            var body = _bodies[i];
+            // Skip bodies that have already been removed this frame
+            if (_removedIds.Contains(body.Id)) continue;
+
             var behavior = BodyBehaviorFactory.Get(body.BodyType);
-            
-            // Fallback to normal behavior if null
             if (behavior == null)
                 behavior = BodyBehaviorFactory.Get(BodyType.Normal);
                 
             behavior.OnUpdate(body, dt, this);
         }
+
+        // 3. Integrate positions from velocities
+        Integrate(scaledDt);
+
+        // 4. Solve collisions
+        SolveCollisions();
+        SolveBoundaryCollisions();
+
+        // 5. Cleanup invalid bodies
+        ValidateBodies();
+
+        // Clear the removed set for next frame (in case ValidateBodies didn't call RemoveBody)
+        _removedIds.Clear();
     }
 
     public void SetBoundaries(double left, double right, double ground)
@@ -215,8 +237,10 @@ public class PhysicsWorld
             var body = _bodies[i];
             if (!body.IsValid())
             {
-                body.Velocity = Vector2.Zero;
-                body.Acceleration = Vector2.Zero;
+                // Remove corrupted body
+                _bodies.RemoveAt(i);
+                _bodyMap.Remove(body.Id);
+                i--;
             }
         }
     }
@@ -235,5 +259,10 @@ public class PhysicsWorld
         }
 
         CreateBody(position, radius, mass, restitution);
+    }
+
+    public bool TryGetBodyById(int id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RigidBody? body)
+    {
+        return _bodyMap.TryGetValue(id, out body);
     }
 }

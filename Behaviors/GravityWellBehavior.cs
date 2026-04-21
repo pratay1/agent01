@@ -19,7 +19,8 @@ public class GravityWellBehavior : BodyBehavior
         const float attractRadius = 250f;
         const float attractStrength = 15000f;
 
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             

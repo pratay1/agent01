@@ -15,7 +15,8 @@ public class GlueBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             

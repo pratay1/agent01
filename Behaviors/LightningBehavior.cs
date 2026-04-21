@@ -24,7 +24,8 @@ public class LightningBehavior : BodyBehavior
         
         if (_zapTimer > 0.5f) _zapTimer = 0;
 
-        foreach (var other in world.Bodies)
+        var bodies = world.Bodies.ToList(); // Snapshot
+        foreach (var other in bodies)
         {
             if (body == other || other.IsStatic) continue;
             
