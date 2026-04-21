@@ -22,7 +22,7 @@ public class LightningBehavior : BodyBehavior
         
         _zapTimer += (float)dt;
         
-        if (_zapTimer > 0.1f) _zapTimer = 0;
+        if (_zapTimer > 0.5f) _zapTimer = 0;
 
         foreach (var other in world.Bodies)
         {

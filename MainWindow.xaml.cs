@@ -136,7 +136,7 @@ public partial class MainWindow : Window
             _lastTickTime = 0;
         }
 
-        if (_lastFpsTime >= 1.0)
+        if (_lastFpsTime >= 1.0 && _lastFpsTime > 0)
         {
             _currentFps = _fpsCounter / _lastFpsTime;
             _fpsCounter = 0;
