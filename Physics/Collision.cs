@@ -34,7 +34,10 @@ public static class Collision
         double distance = System.Math.Sqrt(distanceSq);
         if (distance < 0.0001)
         {
-            return new Manifold(a, b, Vector2.Right, radiusSum);
+            // Use random direction for perfectly overlapping bodies
+            var rng = new Random();
+            double angle = rng.NextDouble() * System.Math.PI * 2;
+            return new Manifold(a, b, new Vector2(System.Math.Cos(angle), System.Math.Sin(angle)), radiusSum);
         }
 
         double depth = radiusSum - distance;
@@ -46,12 +49,15 @@ public static class Collision
     public static List<Manifold> DetectAll(List<RigidBody> bodies)
     {
         List<Manifold> manifolds = new();
+        
+        // Create snapshot to prevent concurrent modification exceptions
+        var bodiesSnapshot = bodies.ToList();
 
-        for (int i = 0; i < bodies.Count; i++)
+        for (int i = 0; i < bodiesSnapshot.Count; i++)
         {
-            for (int j = i + 1; j < bodies.Count; j++)
+            for (int j = i + 1; j < bodiesSnapshot.Count; j++)
             {
-                var manifold = DetectCircleCircle(bodies[i], bodies[j]);
+                var manifold = DetectCircleCircle(bodiesSnapshot[i], bodiesSnapshot[j]);
                 if (manifold != null)
                 {
                     manifolds.Add(manifold);
@@ -111,7 +117,7 @@ public static void PositionalCorrection(Manifold manifold, double percent = 0.8,
 
     if (invMassSum < 0.0001) return;
 
-    double correction = System.Math.Max(depth - slop, 0) / invMassSum * percent;
+        double correction = (System.Math.Max(depth - slop, 0) * percent) / invMassSum;
     Vector2 correctionVector = normal * correction;
 
     if (!a.IsStatic)

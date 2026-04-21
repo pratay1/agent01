@@ -34,7 +34,7 @@ public class GameLoop
     {
         _isRunning = true;
         _accumulator = 0;
-        _lastTime = DateTime.Now.TimeOfDay.TotalSeconds;
+        _lastTime = Stopwatch.GetTimestamp();
         _timer.Start();
     }
 
@@ -48,8 +48,8 @@ public class GameLoop
     {
         if (!_isRunning) return;
 
-        double currentTime = DateTime.Now.TimeOfDay.TotalSeconds;
-        double frameTime = currentTime - _lastTime;
+        double currentTime = Stopwatch.GetTimestamp();
+        double frameTime = (currentTime - _lastTime) / Stopwatch.Frequency;
         _lastTime = currentTime;
 
         // Cap max frame time to prevent spiral of death

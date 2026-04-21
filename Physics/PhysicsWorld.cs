@@ -85,6 +85,7 @@ public class PhysicsWorld
         if (_isPaused) return;
 
         double scaledDt = dt * _timeScale;
+        scaledDt = System.Math.Min(scaledDt, 0.05); // Max 50ms per physics step
 
         ApplyForces(scaledDt);
         Integrate(scaledDt);
@@ -100,6 +101,11 @@ public class PhysicsWorld
         {
             var body = _bodies[i];
             var behavior = BodyBehaviorFactory.Get(body.BodyType);
+            
+            // Fallback to normal behavior if null
+            if (behavior == null)
+                behavior = BodyBehaviorFactory.Get(BodyType.Normal);
+                
             behavior.OnUpdate(body, dt, this);
         }
     }
@@ -171,7 +177,7 @@ public class PhysicsWorld
             Vector2 force = _forceManager.GetTotalForce(body);
             body.ApplyForce(force);
 
-            if (_damping > 0 && !body.IsStatic)
+            if (_damping > 0)
             {
                 Vector2 dampingForce = -body.Velocity * _damping * body.Mass;
                 body.ApplyForce(dampingForce);

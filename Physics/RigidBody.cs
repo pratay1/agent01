@@ -109,7 +109,7 @@ public class RigidBody
         IsStuck = false;
         LifeTime = 0;
 
-        InverseMass = mass > 0 ? 1.0 / mass : 0;
+        InverseMass = mass <= 0 ? 0 : 1.0 / mass;
     }
 
     public void ApplyImpulse(Vector2 impulse)
