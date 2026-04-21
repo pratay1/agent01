@@ -99,6 +99,12 @@
                     <Border x:Name="LightningBodyButton" Background="#252525" CornerRadius="4" Padding="10,8" Margin="0,0,0,3" MouseLeftButtonDown="LightningBodyButton_MouseLeftButtonDown">
                         <StackPanel Orientation="Horizontal"><Ellipse Width="12" Height="12" Fill="#FFCA28"/><TextBlock Text="Lightning" Foreground="#888888" FontSize="11" Margin="10,0,0,0"/></StackPanel>
                     </Border>
+                    <Border x:Name="AngelBodyButton" Background="#252525" CornerRadius="4" Padding="10,8" Margin="0,0,0,3" MouseLeftButtonDown="AngelBodyButton_MouseLeftButtonDown">
+                        <StackPanel Orientation="Horizontal"><Ellipse Width="12" Height="12" Fill="#FFFFFF"/><TextBlock Text="Angel" Foreground="#888888" FontSize="11" Margin="10,0,0,0"/></StackPanel>
+                    </Border>
+                    <Border x:Name="MollyBodyButton" Background="#252525" CornerRadius="4" Padding="10,8" Margin="0,0,0,3" MouseLeftButtonDown="MollyBodyButton_MouseLeftButtonDown">
+                        <StackPanel Orientation="Horizontal"><Ellipse Width="12" Height="12" Fill="#FF4081"/><TextBlock Text="Molly" Foreground="#888888" FontSize="11" Margin="10,0,0,0"/></StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
         </Border>

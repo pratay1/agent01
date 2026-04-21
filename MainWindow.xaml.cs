@@ -187,6 +187,8 @@ public partial class MainWindow : Window
     private void PlasmaBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => SelectBodyType(BodyType.Plasma);
     private void BlackHoleBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => SelectBodyType(BodyType.BlackHole);
     private void LightningBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => SelectBodyType(BodyType.Lightning);
+    private void AngelBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => SelectBodyType(BodyType.Angel);
+    private void MollyBodyButton_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => SelectBodyType(BodyType.Molly);
     #endregion
 
     private void OnMouseLeftDown(Point position)
@@ -228,6 +230,8 @@ public partial class MainWindow : Window
             case BodyType.Plasma: radius = 12; mass = 4; restitution = 0.6; break;
             case BodyType.BlackHole: radius = 15; mass = 15; restitution = 0; break;
             case BodyType.Lightning: radius = 14; mass = 4; restitution = 0.7; break;
+            case BodyType.Angel: radius = 18; mass = 4; restitution = 0.6; break;
+            case BodyType.Molly: radius = 16; mass = 7; restitution = 0.4; break;
             default: radius = 15; mass = 10; restitution = 0.5; break;
         }
         var body = _world.CreateBody(new Vector2((float)position.X, (float)position.Y), (float)radius, (float)mass, (float)restitution);

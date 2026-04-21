@@ -117,6 +117,8 @@ public class Renderer
             BodyType.Phantom => 1,
             BodyType.Heavy => 0,
             BodyType.Normal => 0,
+            BodyType.Angel => 1,
+            BodyType.Molly => 2,
             _ => 0
         };
 
@@ -161,6 +163,8 @@ public class Renderer
         BodyType.BlackHole => Color.FromRgb(171, 71, 188),
         BodyType.Lightning => Color.FromRgb(255, 202, 40),
         BodyType.Fire => Color.FromRgb(255, 87, 34),
+        BodyType.Angel => Color.FromRgb(255, 255, 255),
+        BodyType.Molly => Color.FromRgb(255, 64, 129),
         _ => Color.FromRgb(255, 255, 255)
     };
 
