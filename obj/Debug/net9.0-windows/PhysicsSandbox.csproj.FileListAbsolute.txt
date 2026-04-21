@@ -1,3 +1,8 @@
+C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.exe
+C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.deps.json
+C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.runtimeconfig.json
+C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.dll
+C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.pdb
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\MainWindow.baml
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\MainWindow.g.cs
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\App.g.cs
@@ -8,11 +13,6 @@ C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.AssemblyInfoInput
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.AssemblyInfo.cs
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.csproj.CoreCompileInputs.cache
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.sourcelink.json
-C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.exe
-C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.deps.json
-C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.runtimeconfig.json
-C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.dll
-C:\Users\prata\agent01\bin\Debug\net9.0-windows\PhysicsSandbox.pdb
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.dll
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\refint\PhysicsSandbox.dll
 C:\Users\prata\agent01\obj\Debug\net9.0-windows\PhysicsSandbox.pdb
