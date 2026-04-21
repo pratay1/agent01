@@ -28,24 +28,26 @@ public class Renderer
     private readonly Dictionary<int, Line> _velocityLines = new();
     private readonly HashSet<UIElement> _debugShapes = new();
     private readonly List<Particle> _particles = new();
-    private readonly List<UIElement> _particleShapes = new();
+    private readonly List<Ellipse> _particlePool = new();
+    private readonly List<Ellipse> _activeParticles = new();
     private readonly Random _rand = new Random();
     private const double VelocityScale = 0.1;
     private double _particleTimer = 0;
+    private bool _showVelocityLines = false;
 
     public Renderer(Canvas canvas)
     {
         _canvas = canvas;
     }
 
-    public void UpdateBodies(IEnumerable<RigidBody> bodies)
+    public void UpdateBodies(IEnumerable<RigidBody> bodies, double dt)
     {
         var activeIds = new HashSet<int>();
 
         foreach (var body in bodies)
         {
             activeIds.Add(body.Id);
-            SpawnParticlesForBody(body);
+            SpawnParticlesForBody(body, dt);
             UpdateBodyParticles(body);
 
             double screenX = body.Position.X;
@@ -57,14 +59,17 @@ public class Renderer
                 _bodyShapes[body.Id] = ellipse;
                 _canvas.Children.Add(ellipse);
 
-                var velocityLine = new Line
+                if (_showVelocityLines)
                 {
-                    Stroke = Brushes.Yellow,
-                    StrokeThickness = 2,
-                    Opacity = 0.3
-                };
-                _velocityLines[body.Id] = velocityLine;
-                _canvas.Children.Add(velocityLine);
+                    var velocityLine = new Line
+                    {
+                        Stroke = Brushes.Yellow,
+                        StrokeThickness = 2,
+                        Opacity = 0.3
+                    };
+                    _velocityLines[body.Id] = velocityLine;
+                    _canvas.Children.Add(velocityLine);
+                }
             }
 
             Canvas.SetLeft(ellipse, screenX - body.Radius);
@@ -72,7 +77,8 @@ public class Renderer
             ellipse.Width = body.Radius * 2;
             ellipse.Height = body.Radius * 2;
 
-            UpdateVelocityLine(body, screenX, screenY);
+            if (_showVelocityLines)
+                UpdateVelocityLine(body, screenX, screenY);
         }
 
         foreach (var id in _bodyShapes.Keys.Except(activeIds).ToList())
@@ -89,35 +95,45 @@ public class Renderer
             }
         }
 
-        UpdateParticles();
+        // Clean up velocity lines if disabled
+        if (!_showVelocityLines && _velocityLines.Count > 0)
+        {
+            foreach (var line in _velocityLines.Values)
+            {
+                _canvas.Children.Remove(line);
+            }
+            _velocityLines.Clear();
+        }
+
+        UpdateParticles(dt);
     }
 
-    private void SpawnParticlesForBody(RigidBody body)
+    private void SpawnParticlesForBody(RigidBody body, double dt)
     {
-        _particleTimer += 0.016;
-        if (_particleTimer < 0.05) return;
+        _particleTimer += dt;
+        if (_particleTimer < 0.1) return;
         _particleTimer = 0;
 
         int count = body.BodyType switch
         {
-            BodyType.Explosive => 3,
-            BodyType.Lightning => 3,
-            BodyType.Plasma => 3,
-            BodyType.BlackHole => 2,
-            BodyType.Turbo => 2,
-            BodyType.GravityWell => 2,
-            BodyType.Repulsor => 2,
-            BodyType.Fire => 3,
-            BodyType.Spike => 1,
-            BodyType.AntiGravity => 1,
-            BodyType.Bouncy => 1,
-            BodyType.Glue => 1,
-            BodyType.Freezer => 1,
-            BodyType.Phantom => 1,
+            BodyType.Explosive => 1,
+            BodyType.Lightning => 1,
+            BodyType.Plasma => 1,
+            BodyType.BlackHole => 1,
+            BodyType.Turbo => 1,
+            BodyType.GravityWell => 1,
+            BodyType.Repulsor => 1,
+            BodyType.Fire => 1,
+            BodyType.Spike => 0,
+            BodyType.AntiGravity => 0,
+            BodyType.Bouncy => 0,
+            BodyType.Glue => 0,
+            BodyType.Freezer => 0,
+            BodyType.Phantom => 0,
             BodyType.Heavy => 0,
             BodyType.Normal => 0,
             BodyType.Angel => 1,
-            BodyType.Molly => 2,
+            BodyType.Molly => 1,
             _ => 0
         };
 
@@ -171,39 +187,84 @@ public class Renderer
     {
     }
 
-    private void UpdateParticles()
+    private Ellipse GetOrCreateParticleShape()
     {
-        foreach (var shape in _particleShapes)
+        if (_particlePool.Count > 0)
         {
-            _canvas.Children.Remove(shape);
+            var shape = _particlePool[_particlePool.Count - 1];
+            _particlePool.RemoveAt(_particlePool.Count - 1);
+            return shape;
         }
-        _particleShapes.Clear();
+        return new Ellipse();
+    }
 
-        for (int i = _particles.Count - 1; i >= 0; i--)
+    private void ReturnParticleToPool(Ellipse shape)
+    {
+        const int maxPoolSize = 200;
+        if (_particlePool.Count < maxPoolSize)
+        {
+            _particlePool.Add(shape);
+        }
+    }
+
+    private void UpdateParticles(double dt)
+    {
+        // Update existing active particles in place
+        for (int i = 0; i < _particles.Count; i++)
         {
             var p = _particles[i];
-            p.X += p.VX * 0.016;
-            p.Y += p.VY * 0.016;
-            p.Life -= 0.016;
+            p.X += p.VX * dt;
+            p.Y += p.VY * dt;
+            p.Life -= dt;
 
             if (p.Life <= 0)
             {
                 _particles.RemoveAt(i);
+                i--;
                 continue;
             }
 
-            double opacity = p.Life / p.MaxLife;
-            var ellipse = new Ellipse
+            // Reuse existing shape if available for this particle index
+            Ellipse ellipse;
+            if (i < _activeParticles.Count)
             {
-                Width = p.Size * opacity,
-                Height = p.Size * opacity,
-                Fill = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), p.Color.R, p.Color.G, p.Color.B)),
-                Opacity = opacity * 0.8
-            };
+                ellipse = _activeParticles[i];
+            }
+            else
+            {
+                ellipse = GetOrCreateParticleShape();
+                _canvas.Children.Add(ellipse);
+                _activeParticles.Add(ellipse);
+            }
+
+            double opacity = p.Life / p.MaxLife;
+            
+            ellipse.Width = p.Size * opacity;
+            ellipse.Height = p.Size * opacity;
+            
+            if (ellipse.Fill is SolidColorBrush existingBrush)
+            {
+                existingBrush.Color = Color.FromArgb((byte)(opacity * 255), p.Color.R, p.Color.G, p.Color.B);
+            }
+            else
+            {
+                ellipse.Fill = new SolidColorBrush(Color.FromArgb((byte)(opacity * 255), p.Color.R, p.Color.G, p.Color.B));
+            }
+            
+            ellipse.Opacity = opacity * 0.8;
+            ellipse.Tag = "particle";
+            
             Canvas.SetLeft(ellipse, p.X - p.Size / 2);
             Canvas.SetTop(ellipse, p.Y - p.Size / 2);
-            _canvas.Children.Add(ellipse);
-            _particleShapes.Add(ellipse);
+        }
+
+        // Remove excess active particles
+        while (_activeParticles.Count > _particles.Count)
+        {
+            var particle = _activeParticles[_activeParticles.Count - 1];
+            _canvas.Children.Remove(particle);
+            _activeParticles.RemoveAt(_activeParticles.Count - 1);
+            ReturnParticleToPool(particle);
         }
     }
 
@@ -333,5 +394,7 @@ public class Renderer
         _velocityLines.Clear();
         _debugShapes.Clear();
         _particles.Clear();
+        _particlePool.Clear();
+        _activeParticles.Clear();
     }
 }

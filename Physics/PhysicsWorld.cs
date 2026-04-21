@@ -88,18 +88,19 @@ public class PhysicsWorld
 
         ApplyForces(scaledDt);
         Integrate(scaledDt);
-        HandleSpecialBodyBehaviors();
+        HandleSpecialBodyBehaviors(scaledDt);
         SolveCollisions();
         SolveBoundaryCollisions();
         ValidateBodies();
     }
 
-    private void HandleSpecialBodyBehaviors()
+    private void HandleSpecialBodyBehaviors(double dt)
     {
-        foreach (var body in _bodies.ToList())
+        for (int i = 0; i < _bodies.Count; i++)
         {
+            var body = _bodies[i];
             var behavior = BodyBehaviorFactory.Get(body.BodyType);
-            behavior.OnUpdate(body, 0.016, this);
+            behavior.OnUpdate(body, dt, this);
         }
     }
 
@@ -191,18 +192,21 @@ public class PhysicsWorld
     private void SolveCollisions()
     {
         const int iterations = 8;
+        
         for (int i = 0; i < iterations; i++)
         {
             var manifolds = Collision.DetectAll(_bodies);
             if (manifolds.Count == 0) break;
+            
             Collision.ResolveAll(manifolds);
         }
     }
 
     private void ValidateBodies()
     {
-        foreach (var body in _bodies.ToList())
+        for (int i = 0; i < _bodies.Count; i++)
         {
+            var body = _bodies[i];
             if (!body.IsValid())
             {
                 body.Velocity = Vector2.Zero;

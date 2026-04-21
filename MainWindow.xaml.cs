@@ -169,7 +169,7 @@ public partial class MainWindow : Window
 
     private void OnRender(double dt)
     {
-        _renderer.UpdateBodies(_world.Bodies);
+        _renderer.UpdateBodies(_world.Bodies, dt);
         UpdateStatus();
     }
 
