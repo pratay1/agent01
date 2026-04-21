@@ -5,7 +5,6 @@ namespace PhysicsSandbox.Behaviors;
 
 public class MollyBehavior : BodyBehavior
 {
-    private static readonly Dictionary<int, int> _latchedBodies = new();
     private const double AngelDetectionRadius = 150;
     private const double ExplosionForce = 15000;
 
@@ -21,75 +20,96 @@ public class MollyBehavior : BodyBehavior
     {
         if (body.HasExploded) return;
 
-        RigidBody? nearbyAngel = null;
-        double closestAngelDist = double.MaxValue;
+        RigidBody? nearestAngel = null;
+        double closestDist = double.MaxValue;
 
         foreach (var other in world.Bodies)
         {
             if (other.BodyType == BodyType.Angel && other != body)
             {
-                var dist = Vector2.Distance(body.Position, other.Position);
-                if (dist < AngelDetectionRadius && dist < closestAngelDist)
+                double dist = Vector2.Distance(body.Position, other.Position);
+                if (dist < AngelDetectionRadius && dist < closestDist)
                 {
-                    closestAngelDist = dist;
-                    nearbyAngel = other;
+                    closestDist = dist;
+                    nearestAngel = other;
                 }
             }
         }
 
-        if (nearbyAngel != null)
+        if (nearestAngel != null)
         {
-            if (_latchedBodies.ContainsKey(body.Id))
+            // Check if already latched
+            if (body.LatchedPartnerId.HasValue)
             {
-                int latchedToId = _latchedBodies[body.Id];
-                var latchedBody = world.Bodies.FirstOrDefault(b => b.Id == latchedToId);
-                if (latchedBody == null || latchedBody.BodyType != BodyType.Angel)
+                var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
+                // Verify partner is still valid and is an Angel
+                if (partner == null || partner.BodyType != BodyType.Angel)
                 {
-                    _latchedBodies.Remove(body.Id);
+                    body.LatchedPartnerId = null;
                 }
                 else
                 {
+                    // Check for third body approaching to break latch
+                    bool thirdBodyNear = false;
                     foreach (var other in world.Bodies)
                     {
-                        if (other == body || other == latchedBody) continue;
-                        var dist = Vector2.Distance(body.Position, other.Position);
+                        if (other == body || other == partner) continue;
+                        double dist = Vector2.Distance(body.Position, other.Position);
                         if (dist < body.Radius + other.Radius + 20)
                         {
-                            _latchedBodies.Remove(body.Id);
+                            thirdBodyNear = true;
                             break;
                         }
                     }
 
-                    if (_latchedBodies.ContainsKey(body.Id))
+                    if (thirdBodyNear)
                     {
-                        body.Velocity = latchedBody.Velocity;
-                        body.Position = latchedBody.Position + (body.Position - latchedBody.Position).Normalized * (float)(body.Radius + latchedBody.Radius);
+                        // Break latch
+                        partner.LatchedPartnerId = null;
+                        body.LatchedPartnerId = null;
+                    }
+                    else
+                    {
+                        // Maintain latch: sync velocity and position
+                        body.Velocity = partner.Velocity;
+                        var dir = (body.Position - partner.Position).Normalized;
+                        if (dir.LengthSquared < 1e-6)
+                            dir = new Vector2(1, 0);
+                        body.Position = partner.Position + dir * (float)(body.Radius + partner.Radius);
                         return;
                     }
                 }
             }
 
-            var dirToAngel = (nearbyAngel.Position - body.Position).Normalized;
+            // Attraction force towards Angel
+            var dirToAngel = (nearestAngel.Position - body.Position).Normalized;
             body.ApplyForce(dirToAngel * 800);
 
-            if (closestAngelDist < body.Radius + nearbyAngel.Radius + 5)
+            // If very close, latch
+            if (Vector2.Distance(body.Position, nearestAngel.Position) < body.Radius + nearestAngel.Radius + 5)
             {
-                _latchedBodies[body.Id] = nearbyAngel.Id;
-                body.Velocity = nearbyAngel.Velocity;
+                body.LatchedPartnerId = nearestAngel.Id;
+                nearestAngel.LatchedPartnerId = body.Id;
+                body.Velocity = nearestAngel.Velocity;
             }
         }
-        else
+        else // No Angel nearby
         {
-            if (_latchedBodies.ContainsKey(body.Id))
+            // If was latched, clear latch
+            if (body.LatchedPartnerId.HasValue)
             {
-                _latchedBodies.Remove(body.Id);
+                var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
+                if (partner != null)
+                    partner.LatchedPartnerId = null;
+                body.LatchedPartnerId = null;
             }
 
+            // Check collision with any other body (including other Mollys)
             foreach (var other in world.Bodies)
             {
-                if (body == other || other.BodyType == BodyType.Molly || other.BodyType == BodyType.Angel) continue;
+                if (body == other) continue;
 
-                var dist = (float)Vector2.Distance(body.Position, other.Position);
+                double dist = Vector2.Distance(body.Position, other.Position);
                 if (dist < body.Radius + other.Radius)
                 {
                     TriggerExplosion(body, world);
@@ -101,6 +121,15 @@ public class MollyBehavior : BodyBehavior
 
     private void TriggerExplosion(RigidBody body, PhysicsWorld world)
     {
+        // Clear any existing latch
+        if (body.LatchedPartnerId.HasValue)
+        {
+            var partner = world.Bodies.FirstOrDefault(b => b.Id == body.LatchedPartnerId);
+            if (partner != null)
+                partner.LatchedPartnerId = null;
+            body.LatchedPartnerId = null;
+        }
+
         body.HasExploded = true;
         world.ForceManager.Explosion.Trigger(body.Position);
 

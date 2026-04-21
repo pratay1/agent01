@@ -67,6 +67,9 @@ public class RigidBody
     public bool IsFrozen { get; set; }
     public bool IsStuck { get; set; }
     public double LifeTime { get; set; }
+    public double FlyTimer { get; set; }
+    public bool IsFlying { get; set; }
+    public int? LatchedPartnerId { get; set; }
 
     public bool IsStatic => Mass == 0 || InverseMass == 0;
 

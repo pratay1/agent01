@@ -5,8 +5,6 @@ namespace PhysicsSandbox.Behaviors;
 
 public class AngelBehavior : BodyBehavior
 {
-    private double _flyTimer;
-    private bool _isFlying;
     private readonly double _flyInterval = 2.0;
     private readonly double _flyDuration = 1.5;
 
@@ -20,21 +18,21 @@ public class AngelBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        _flyTimer += dt;
+        body.FlyTimer += dt;
 
-        if (!_isFlying && _flyTimer >= _flyInterval)
+        if (!body.IsFlying && body.FlyTimer >= _flyInterval)
         {
-            _isFlying = true;
-            _flyTimer = 0;
+            body.IsFlying = true;
+            body.FlyTimer = 0;
         }
 
-        if (_isFlying && _flyTimer >= _flyDuration)
+        if (body.IsFlying && body.FlyTimer >= _flyDuration)
         {
-            _isFlying = false;
-            _flyTimer = 0;
+            body.IsFlying = false;
+            body.FlyTimer = 0;
         }
 
-        if (_isFlying)
+        if (body.IsFlying)
         {
             body.ApplyForce(new Vector2(0, -1800));
             body.ApplyForce(new Vector2(0, -300));

@@ -62,55 +62,63 @@ public static class Collision
         return manifolds;
     }
 
-    public static void Resolve(Manifold manifold)
-    {
-        var (a, b, normal, depth, restitution) = 
-            (manifold.BodyA, manifold.BodyB, manifold.Normal, manifold.Depth, manifold.Restitution);
+public static void Resolve(Manifold manifold)
+{
+    var (a, b, normal, depth, restitution) = 
+        (manifold.BodyA, manifold.BodyB, manifold.Normal, manifold.Depth, manifold.Restitution);
 
-        if (a.IsStatic && b.IsStatic) return;
+    if (a.IsStatic && b.IsStatic) return;
 
-        Vector2 relativeVelocity = b.Velocity - a.Velocity;
-        double velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
+    // Skip collision resolution for latched pairs (Molly-Angel)
+    if (a.LatchedPartnerId == b.Id || b.LatchedPartnerId == a.Id)
+        return;
 
-        if (velocityAlongNormal > 0) return;
+    Vector2 relativeVelocity = b.Velocity - a.Velocity;
+    double velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
 
-        double e = restitution;
-        double invMassA = a.InverseMass;
-        double invMassB = b.InverseMass;
-        double invMassSum = invMassA + invMassB;
+    if (velocityAlongNormal > 0) return;
 
-        if (invMassSum < 0.0001) return;
+    double e = restitution;
+    double invMassA = a.InverseMass;
+    double invMassB = b.InverseMass;
+    double invMassSum = invMassA + invMassB;
 
-        double j = -(1 + e) * velocityAlongNormal;
-        j /= invMassSum;
+    if (invMassSum < 0.0001) return;
 
-        Vector2 impulse = normal * j;
+    double j = -(1 + e) * velocityAlongNormal;
+    j /= invMassSum;
 
-        if (!a.IsStatic)
-            a.Velocity = a.Velocity - impulse * invMassA;
-        if (!b.IsStatic)
-            b.Velocity = b.Velocity + impulse * invMassB;
-    }
+    Vector2 impulse = normal * j;
 
-    public static void PositionalCorrection(Manifold manifold, double percent = 0.8, double slop = 0.01)
-    {
-        var (a, b, normal, depth) = 
-            (manifold.BodyA, manifold.BodyB, manifold.Normal, manifold.Depth);
+    if (!a.IsStatic)
+        a.Velocity = a.Velocity - impulse * invMassA;
+    if (!b.IsStatic)
+        b.Velocity = b.Velocity + impulse * invMassB;
+}
 
-        double invMassA = a.InverseMass;
-        double invMassB = b.InverseMass;
-        double invMassSum = invMassA + invMassB;
+public static void PositionalCorrection(Manifold manifold, double percent = 0.8, double slop = 0.01)
+{
+    var (a, b, normal, depth) = 
+        (manifold.BodyA, manifold.BodyB, manifold.Normal, manifold.Depth);
 
-        if (invMassSum < 0.0001) return;
+    // Skip positional correction for latched pairs
+    if (a.LatchedPartnerId == b.Id || b.LatchedPartnerId == a.Id)
+        return;
 
-        double correction = System.Math.Max(depth - slop, 0) / invMassSum * percent;
-        Vector2 correctionVector = normal * correction;
+    double invMassA = a.InverseMass;
+    double invMassB = b.InverseMass;
+    double invMassSum = invMassA + invMassB;
 
-        if (!a.IsStatic)
-            a.Position = a.Position - correctionVector * invMassA;
-        if (!b.IsStatic)
-            b.Position = b.Position + correctionVector * invMassB;
-    }
+    if (invMassSum < 0.0001) return;
+
+    double correction = System.Math.Max(depth - slop, 0) / invMassSum * percent;
+    Vector2 correctionVector = normal * correction;
+
+    if (!a.IsStatic)
+        a.Position = a.Position - correctionVector * invMassA;
+    if (!b.IsStatic)
+        b.Position = b.Position + correctionVector * invMassB;
+}
 
     public static void ResolveAll(List<Manifold> manifolds)
     {
