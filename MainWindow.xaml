@@ -50,7 +50,7 @@
         
         <!-- Body Selection Toolbar -->
         <Border Grid.Row="1" Grid.Column="1" Background="#1A1A1F" Width="250">
-            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="12">
                     <TextBlock Text="Bodies" Foreground="#444444" FontSize="10" FontWeight="SemiBold" Margin="0,0,0,12"/>
                     
