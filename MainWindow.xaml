@@ -17,7 +17,16 @@
                 <TextBlock Text="Physics Sandbox" Foreground="#ffffff" FontSize="14" 
                            VerticalAlignment="Center" FontWeight="Medium"/>
                 
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Selected Body Visualizer -->
+                    <Border Background="#1f1f1f" CornerRadius="4" Padding="8,6" Margin="0,0,16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="SelectedBodyColor" Width="12" Height="12" Fill="#4FC3F7" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="SelectedBodyName" Text="Normal" Foreground="#ffffff" 
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                    </Border>
+                    
                     <TextBlock x:Name="StatusText" Text="0 bodies" Foreground="#888888" 
                                FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
                     
@@ -40,11 +49,15 @@
                 Background="#121212"/>
         
         <!-- Footer -->
-        <Border Grid.Row="2" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,1,0,0">
-            <TextBlock Foreground="#555555" FontSize="11" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center">
-                LMB - Spawn/Drag  |  RMB - Explode  |  SPACE - Pause  |  C - Clear  |  G - Gravity  |  W - Wind
-            </TextBlock>
+        <Border Grid.Row="2" Background="#121212" BorderBrush="#1f1f1f" BorderThickness="0,1,0,0" Padding="0,4">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Foreground="#555555" FontSize="11" Margin="0,0,30,0">
+                    LMB: Spawn/Drag | RMB: Explode | SPACE: Pause | C: Clear | G: Gravity | W: Wind | +/-: Speed
+                </TextBlock>
+                <TextBlock Foreground="#666666" FontSize="11">
+                    [1] Normal  [2] Bouncy  [3] Heavy  [4] Explosive  [5] Gravity Well  [6] Black Hole
+                </TextBlock>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

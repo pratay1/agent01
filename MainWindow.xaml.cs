@@ -15,12 +15,22 @@ public partial class MainWindow : Window
     private readonly GameLoop _gameLoop;
 
     private double _canvasWidth = 1280;
-    private double _canvasHeight = 720;
+    private double _canvasHeight = 680; // Subtract bottom bar height
     
     private BodyType _selectedBodyType = BodyType.Normal;
     private RigidBody? _grabbedBody;
     private Point _grabOffset;
     private bool _isPaused = false;
+    
+    private readonly Dictionary<BodyType, (string Name, string Color)> _bodyInfo = new()
+    {
+        { BodyType.Normal, ("Normal", "#4FC3F7") },
+        { BodyType.Bouncy, ("Bouncy", "#81C784") },
+        { BodyType.Heavy, ("Heavy", "#FFB74D") },
+        { BodyType.Explosive, ("Explosive", "#EF5350") },
+        { BodyType.GravityWell, ("Gravity Well", "#26C6DA") },
+        { BodyType.BlackHole, ("Black Hole", "#1A1A1A") }
+    };
 
     public MainWindow()
     {
@@ -41,7 +51,21 @@ public partial class MainWindow : Window
         _gameLoop = new GameLoop(OnUpdate, OnRender, 60.0);
 
         SetupInput();
+        SelectBody(BodyType.Normal);
         StartGame();
+    }
+
+    private void SelectBody(BodyType type)
+    {
+        _selectedBodyType = type;
+        UpdateSelectedBodyUI();
+    }
+
+    private void UpdateSelectedBodyUI()
+    {
+        var (name, colorHex) = _bodyInfo[_selectedBodyType];
+        SelectedBodyName.Text = name;
+        SelectedBodyColor.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
     }
 
     private void SetupInput()
@@ -57,12 +81,12 @@ public partial class MainWindow : Window
                 case Key.W: ToggleWind(); break;
                 case Key.OemPlus: _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1); break;
                 case Key.OemMinus: _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1); break;
-                case Key.D1: _selectedBodyType = BodyType.Normal; break;
-                case Key.D2: _selectedBodyType = BodyType.Bouncy; break;
-                case Key.D3: _selectedBodyType = BodyType.Heavy; break;
-                case Key.D4: _selectedBodyType = BodyType.Explosive; break;
-                case Key.D5: _selectedBodyType = BodyType.GravityWell; break;
-                case Key.D6: _selectedBodyType = BodyType.BlackHole; break;
+                case Key.D1: SelectBody(BodyType.Normal); break;
+                case Key.D2: SelectBody(BodyType.Bouncy); break;
+                case Key.D3: SelectBody(BodyType.Heavy); break;
+                case Key.D4: SelectBody(BodyType.Explosive); break;
+                case Key.D5: SelectBody(BodyType.GravityWell); break;
+                case Key.D6: SelectBody(BodyType.BlackHole); break;
             }
         };
 
