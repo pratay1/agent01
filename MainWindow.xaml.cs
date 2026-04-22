@@ -108,17 +108,32 @@ public partial class MainWindow : Window
         var (name, colorHex) = _bodyInfo[_selectedBodyType];
         SelectedBodyName.Text = name;
         SelectedBodyColor.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
-        
-        // Update button states
+
+        // Update button states: selected uses body color, unselected are muted
         foreach (BodyType type in Enum.GetValues<BodyType>())
         {
             var btnName = $"Btn{type}";
             var btn = FindName(btnName) as System.Windows.Controls.Button;
             if (btn != null)
             {
-                btn.Background = type == _selectedBodyType 
-                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(_bodyInfo[type].Color)) 
-                    : new SolidColorBrush(Color.FromRgb(31, 31, 31));
+                bool isSelected = type == _selectedBodyType;
+                var (_, btnColorHex) = _bodyInfo[type];
+
+                var bg = isSelected
+                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(btnColorHex))
+                    : new SolidColorBrush(Color.FromRgb(26, 26, 26)); // #1A1A1A
+
+                var border = isSelected
+                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(btnColorHex))
+                    : new SolidColorBrush(Color.FromRgb(42, 42, 42)); // #2A2A2A
+
+                var fg = isSelected
+                    ? new SolidColorBrush(Colors.White)
+                    : new SolidColorBrush(Color.FromRgb(170, 170, 170)); // #AAAAAA
+
+                btn.Background = bg;
+                btn.BorderBrush = border;
+                btn.Foreground = fg;
             }
         }
     }
