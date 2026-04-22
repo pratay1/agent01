@@ -37,8 +37,6 @@ public partial class MainWindow : Window
         { BodyType.Explosive, ("Explosive", "#EF5350") },
         { BodyType.Repulsor, ("Repulsor", "#BA68C8") },
         { BodyType.GravityWell, ("Gravity Well", "#26C6DA") },
-        { BodyType.AntiGravity, ("Anti Gravity", "#00BCD4") },
-        { BodyType.Freezer, ("Freezer", "#81D4FA") },
         { BodyType.Turbo, ("Turbo", "#FFEB3B") },
         { BodyType.Phantom, ("Phantom", "#9575CD") },
         { BodyType.Spike, ("Spike", "#F44336") },
@@ -162,14 +160,13 @@ public partial class MainWindow : Window
                 case Key.OemComma: ToggleWind(); break;
                 case Key.OemPlus: _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1); break;
                 case Key.OemMinus: _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1); break;
+
                 case Key.D1: SelectBody(BodyType.Normal); break;
                 case Key.D2: SelectBody(BodyType.Bouncy); break;
                 case Key.D3: SelectBody(BodyType.Heavy); break;
                 case Key.D4: SelectBody(BodyType.Explosive); break;
                 case Key.D5: SelectBody(BodyType.Repulsor); break;
                 case Key.D6: SelectBody(BodyType.GravityWell); break;
-                case Key.D7: SelectBody(BodyType.AntiGravity); break;
-                case Key.D8: SelectBody(BodyType.Freezer); break;
                 case Key.D9: SelectBody(BodyType.Turbo); break;
                 case Key.D0: SelectBody(BodyType.Phantom); break;
                 case Key.Q: SelectBody(BodyType.Spike); break;

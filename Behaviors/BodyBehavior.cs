@@ -28,8 +28,6 @@ public static class BodyBehaviorFactory
         { BodyType.Explosive, new ExplosiveBehavior() },
         { BodyType.Repulsor, new RepulsorBehavior() },
         { BodyType.GravityWell, new GravityWellBehavior() },
-        { BodyType.AntiGravity, new AntiGravityBehavior() },
-        { BodyType.Freezer, new FreezerBehavior() },
         { BodyType.Turbo, new TurboBehavior() },
         { BodyType.Phantom, new PhantomBehavior() },
         { BodyType.Spike, new SpikeBehavior() },

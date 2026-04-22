@@ -87,19 +87,11 @@
                             Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
                             FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
                     
-                    <Button x:Name="BtnGravityWell" Click="BodyTypeButton_Click" Tag="GravityWell"
-                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
-                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
-                    
-                    <Button x:Name="BtnAntiGravity" Click="BodyTypeButton_Click" Tag="AntiGravity"
-                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
-                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
-                    
-                    <Button x:Name="BtnFreezer" Click="BodyTypeButton_Click" Tag="Freezer"
-                            Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
-                            FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
-                    
-                    <Button x:Name="BtnTurbo" Click="BodyTypeButton_Click" Tag="Turbo"
+                     <Button x:Name="BtnGravityWell" Click="BodyTypeButton_Click" Tag="GravityWell"
+                             Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
+                             FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
+                     
+                     <Button x:Name="BtnTurbo" Click="BodyTypeButton_Click" Tag="Turbo"
                             Height="32" Margin="0,0,0,4" Background="#1f1f1f" Foreground="#ffffff" BorderThickness="0"
                             FontSize="11" HorizontalContentAlignment="Left" Padding="12,0" Cursor="Hand"/>
                     

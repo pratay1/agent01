@@ -24,6 +24,10 @@ public static class Collision
 {
     public static Manifold? DetectCircleCircle(RigidBody a, RigidBody b)
     {
+        // Phantom bodies pass through everything - skip collision detection
+        if (a.BodyType == BodyType.Phantom || b.BodyType == BodyType.Phantom)
+            return null;
+
         Vector2 diff = b.Position - a.Position;
         double distanceSq = diff.LengthSquared;
         double radiusSum = a.Radius + b.Radius;
