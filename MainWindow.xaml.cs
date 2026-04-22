@@ -160,23 +160,6 @@ public partial class MainWindow : Window
                 case Key.OemComma: ToggleWind(); break;
                 case Key.OemPlus: _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1); break;
                 case Key.OemMinus: _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1); break;
-
-                case Key.D1: SelectBody(BodyType.Normal); break;
-                case Key.D2: SelectBody(BodyType.Bouncy); break;
-                case Key.D3: SelectBody(BodyType.Heavy); break;
-                case Key.D4: SelectBody(BodyType.Explosive); break;
-                case Key.D5: SelectBody(BodyType.Repulsor); break;
-                case Key.D6: SelectBody(BodyType.GravityWell); break;
-                case Key.D9: SelectBody(BodyType.Turbo); break;
-                case Key.D0: SelectBody(BodyType.Phantom); break;
-                case Key.Q: SelectBody(BodyType.Spike); break;
-                case Key.W: SelectBody(BodyType.Glue); break;
-                case Key.E: SelectBody(BodyType.Plasma); break;
-                case Key.R: SelectBody(BodyType.BlackHole); break;
-                case Key.T: SelectBody(BodyType.Lightning); break;
-                case Key.Y: SelectBody(BodyType.Fire); break;
-                case Key.U: SelectBody(BodyType.Angel); break;
-                case Key.I: SelectBody(BodyType.Molly); break;
             }
         };
 
@@ -305,6 +288,7 @@ public partial class MainWindow : Window
     {
         string status = $"{_world.Bodies.Count} bodies";
         if (_isPaused) status += " | PAUSED";
+        status += $" | Speed: {_world.TimeScale:F1}x";
         StatusText.Text = status;
     }
 
