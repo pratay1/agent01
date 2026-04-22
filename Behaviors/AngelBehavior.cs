@@ -5,7 +5,8 @@ namespace PhysicsSandbox.Behaviors;
 
 public class AngelBehavior : BodyBehavior
 {
-    private readonly double _flyInterval = 2.0;
+    private readonly double _flyIntervalMin = 4.0;
+    private readonly double _flyIntervalMax = 6.0;
     private readonly double _flyDuration = 1.5;
 
     public override BodyType Type => BodyType.Angel;
@@ -16,13 +17,20 @@ public class AngelBehavior : BodyBehavior
     public override double DefaultMass => 4;
     public override double DefaultRestitution => 0.6;
 
+    public override void OnCreate(RigidBody body)
+    {
+        base.OnCreate(body);
+        body.FlyInterval = _flyIntervalMin + Random.Shared.NextDouble() * (_flyIntervalMax - _flyIntervalMin);
+        body.FlyTimer = 0;
+    }
+
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
         body.FlyTimer += dt;
 
         if (!body.IsFlying)
         {
-            if (body.FlyTimer >= _flyInterval)
+            if (body.FlyTimer >= body.FlyInterval)
             {
                 body.IsFlying = true;
                 body.FlyTimer = 0; // Reset timer when flight starts
@@ -39,7 +47,7 @@ public class AngelBehavior : BodyBehavior
 
         if (body.IsFlying)
         {
-            body.ApplyForce(new Vector2(0, -1800));
+            body.ApplyForce(new Vector2(0, -2000));
         }
     }
 }

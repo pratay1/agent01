@@ -130,7 +130,7 @@ public class MollyBehavior : BodyBehavior
         for (int i = 0; i < 10; i++)
         {
             float angle = i * (float)System.Math.PI * 2 / 10;
-            float speed = 250f + (float)(_rand.NextDouble() * 150);
+            float speed = 250f + (float)(Random.Shared.NextDouble() * 150);
             var vel = new Vector2(
                 (float)System.Math.Cos(angle) * speed,
                 (float)System.Math.Sin(angle) * speed);
@@ -153,6 +153,4 @@ public class MollyBehavior : BodyBehavior
 
         try { world.RemoveBody(body); } catch { }
     }
-
-    private static readonly Random _rand = new Random();
 }

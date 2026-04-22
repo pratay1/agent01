@@ -77,6 +77,7 @@ public class RigidBody
     public bool IsStuck { get; set; }
     public double LifeTime { get; set; }
     public double FlyTimer { get; set; }
+    public double FlyInterval { get; set; } = 2.0;
     public bool IsFlying { get; set; }
     public int? LatchedPartnerId { get; set; }
 

@@ -22,6 +22,13 @@ public partial class MainWindow : Window
     private Point _grabOffset;
     private bool _isPaused = false;
     
+    // Shift-click spawning
+    private bool _isShiftSpawning = false;
+    private double _shiftSpawnAccumulator = 0.0;
+    private Point _shiftSpawnPosition;
+    private const double ShiftSpawnRate = 3.0; // objects per second
+    private const int MaxShiftSpawnsPerFrame = 10;
+    
     private readonly Dictionary<BodyType, (string Name, string Color)> _bodyInfo = new()
     {
         { BodyType.Normal, ("Normal", "#4FC3F7") },
@@ -181,6 +188,16 @@ public partial class MainWindow : Window
         {
             var pos = e.GetPosition(GameCanvas);
             
+            // Check if Shift is held for rapid spawning
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                _isShiftSpawning = true;
+                _shiftSpawnPosition = pos;
+                _shiftSpawnAccumulator = 0.0;
+                SpawnBody(pos); // Spawn immediately on click
+                return;
+            }
+            
             // Try grab existing body
             _grabbedBody = null;
             foreach (var body in _world.Bodies)
@@ -197,7 +214,11 @@ public partial class MainWindow : Window
             SpawnBody(pos);
         };
 
-        GameCanvas.MouseLeftButtonUp += (s, e) => _grabbedBody = null;
+        GameCanvas.MouseLeftButtonUp += (s, e) => 
+        {
+            _grabbedBody = null;
+            _isShiftSpawning = false;
+        };
         
         GameCanvas.MouseMove += (s, e) =>
         {
@@ -206,6 +227,12 @@ public partial class MainWindow : Window
                 var pos = e.GetPosition(GameCanvas);
                 _grabbedBody.Position = new Vector2(pos.X - _grabOffset.X, pos.Y - _grabOffset.Y);
                 _grabbedBody.Velocity = Vector2.Zero;
+            }
+            
+            // Update spawn position while shift+clicking
+            if (_isShiftSpawning)
+            {
+                _shiftSpawnPosition = e.GetPosition(GameCanvas);
             }
         };
 
@@ -251,7 +278,23 @@ public partial class MainWindow : Window
     private void OnUpdate(double dt) 
     {
         if (!_isPaused)
+        {
+            // Handle shift+click rapid spawning
+            if (_isShiftSpawning)
+            {
+                _shiftSpawnAccumulator += dt;
+                double spawnInterval = 1.0 / ShiftSpawnRate; // ~0.333 seconds
+                int spawnsThisFrame = 0;
+                while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < MaxShiftSpawnsPerFrame)
+                {
+                    SpawnBody(_shiftSpawnPosition);
+                    _shiftSpawnAccumulator -= spawnInterval;
+                    spawnsThisFrame++;
+                }
+            }
+            
             _world.Step(dt);
+        }
     }
 
     private void OnRender(double dt)
