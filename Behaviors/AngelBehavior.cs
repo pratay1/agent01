@@ -5,9 +5,8 @@ namespace PhysicsSandbox.Behaviors;
 
 public class AngelBehavior : BodyBehavior
 {
-    private readonly double _flyIntervalMin = 4.0;
-    private readonly double _flyIntervalMax = 6.0;
-    private readonly double _flyDuration = 1.5;
+    private const double FlingInterval = 3.0;
+    private const double FlingForce = 5000;
 
     public override BodyType Type => BodyType.Angel;
     public override string Name => "Angel";
@@ -20,7 +19,6 @@ public class AngelBehavior : BodyBehavior
     public override void OnCreate(RigidBody body)
     {
         base.OnCreate(body);
-        body.FlyInterval = _flyIntervalMin + Random.Shared.NextDouble() * (_flyIntervalMax - _flyIntervalMin);
         body.FlyTimer = 0;
     }
 
@@ -28,26 +26,13 @@ public class AngelBehavior : BodyBehavior
     {
         body.FlyTimer += dt;
 
-        if (!body.IsFlying)
+        if (body.FlyTimer >= FlingInterval)
         {
-            if (body.FlyTimer >= body.FlyInterval)
-            {
-                body.IsFlying = true;
-                body.FlyTimer = 0; // Reset timer when flight starts
-            }
-        }
-        else
-        {
-            if (body.FlyTimer >= _flyDuration)
-            {
-                body.IsFlying = false;
-                body.FlyTimer = 0;
-            }
-        }
-
-        if (body.IsFlying)
-        {
-            body.ApplyForce(new Vector2(0, -2000));
+            // Random fling direction every 3 seconds
+            double angle = Random.Shared.NextDouble() * System.Math.PI * 2;
+            var dir = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle));
+            body.ApplyImpulse(dir * FlingForce);
+            body.FlyTimer = 0;
         }
     }
 }

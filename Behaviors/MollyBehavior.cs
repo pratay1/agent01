@@ -81,7 +81,7 @@ public class MollyBehavior : BodyBehavior
             }
 
             var dirToAngel = (nearestAngel.Position - body.Position).Normalized;
-            body.ApplyForce(dirToAngel * 800);
+            body.ApplyForce(dirToAngel * 5000); // Incredibly strong attraction
 
             if (Vector2.Distance(body.Position, nearestAngel.Position) < body.Radius + nearestAngel.Radius + 5)
             {
