@@ -1,4 +1,4 @@
-using PhysicsSandbox.Math;
+using PhysicsSandbox.Mathematics;
 
 namespace PhysicsSandbox.Physics;
 

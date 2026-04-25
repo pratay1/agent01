@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows;
-using PhysicsSandbox.Math;
+using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
 
 namespace PhysicsSandbox.Rendering;

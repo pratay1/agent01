@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using PhysicsSandbox.Engine;
-using PhysicsSandbox.Math;
+using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
 using PhysicsSandbox.Rendering;
 

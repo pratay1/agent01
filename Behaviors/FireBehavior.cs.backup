@@ -1,8 +1,7 @@
-using PhysicsSandbox.Mathematics;
+using PhysicsSandbox.Math;
 using PhysicsSandbox.Physics;
 using System;
 using System.Collections.Generic;
-using System.Windows.Media;
 using System.Diagnostics;
 using System.Text;
 
@@ -108,7 +107,7 @@ public class FireBehavior : BodyBehavior
     private double _sizeVariation;
     private double _intensityMultiplier = 1.0;
     private double _currentRadius;
-    private bool _isInVacuumPrevFrame;
+    private bool _wasInVacuumPrevFrame;
     private double _timeSinceLastSpread;
 
     #endregion
@@ -117,10 +116,6 @@ public class FireBehavior : BodyBehavior
 
     private readonly Stopwatch _updateStopwatch = new Stopwatch();
     private double _peakTemperature;
-    private double _totalHeatOutput;
-    private double _totalFuelConsumed;
-    private readonly List<Vector2> _trailPositions = new();
-    private readonly Dictionary<int, double> _ignitedBodies = new();
     private int _ignitionsCaused;
     private int _bodiesIgnitedTotal;
     private double _totalSpreadDistance;
@@ -211,7 +206,7 @@ public class FireBehavior : BodyBehavior
             ApplyRadiation(body, world);
             UpdateFlickerAndSize(dt);
             SpreadFire(body, dt, world);
-            UpdateIgnitionChainEffects(body, world, dt);
+            UpdateIgnitionChainEffects(body, world);
             EmitParticles(body, dt);
             UpdateTrail(body, dt);
             UpdateStateHistory(body, dt);
@@ -357,7 +352,7 @@ public class FireBehavior : BodyBehavior
 
     #region Ignition Effects
 
-    private void UpdateIgnitionChainEffects(RigidBody body, PhysicsWorld world, double dt)
+    private void UpdateIgnitionChainEffects(RigidBody body, PhysicsWorld world)
     {
         foreach (var other in world.Bodies)
         {
@@ -366,7 +361,7 @@ public class FireBehavior : BodyBehavior
             if (dist > _currentRadius * 4.0) continue;
             if (_currentTemperature > BODY_IGNITION_THRESHOLD && !_ignitedBodies.ContainsKey(other.Id))
             {
-                double heatTransfer = _currentTemperature * HEAT_TRANSMISSION_FACTOR / Math.Max(1.0, dist) * dt;
+                double heatTransfer = _currentTemperature * HEAT_TRANSMISSION_FACTOR / Math.Max(1.0, dist) * world.SimulationStepTime;
                 _heatEmittedTotal += heatTransfer;
             }
         }
@@ -607,3 +602,5 @@ public class FireBehavior : BodyBehavior
 
     #endregion
 }
+
+public enum BodyType { Normal, Bouncy, Fire, Heavy, Angel, Glue, Lightning, Plasma, Explosive, Turbo, Spike, BlackHole, Repulsor, GravityWell, Molly, Phantom }

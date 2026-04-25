@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using PhysicsSandbox.Behaviors;
-using PhysicsSandbox.Math;
+using PhysicsSandbox.Mathematics;
 
 namespace PhysicsSandbox.Physics;
 

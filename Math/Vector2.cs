@@ -1,4 +1,4 @@
-namespace PhysicsSandbox.Math;
+namespace PhysicsSandbox.Mathematics;
 
 public struct Vector2
 {
@@ -13,6 +13,8 @@ public struct Vector2
     public static Vector2 Down => new(0, 1);
     public static Vector2 Left => new(-1, 0);
     public static Vector2 Right => new(1, 0);
+    public static Vector2 UnitX => new(1, 0);
+    public static Vector2 UnitY => new(0, 1);
 
     public double Length => System.Math.Sqrt(X * X + Y * Y);
     public double LengthSquared => X * X + Y * Y;

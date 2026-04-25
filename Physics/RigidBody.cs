@@ -1,4 +1,5 @@
-using PhysicsSandbox.Math;
+using PhysicsSandbox.Mathematics;
+using PhysicsSandbox.Behaviors;
 
 namespace PhysicsSandbox.Physics;
 
@@ -80,6 +81,20 @@ public class RigidBody
     public int? LatchedPartnerId { get; set; }
 
     public bool IsStatic => Mass == 0 || InverseMass == 0;
+
+    // Additional properties needed by behaviors
+    public BodyBehavior? Behavior { get; set; }
+    public PhysicsWorld? World { get; set; }
+    public double Lifetime
+    {
+        get => LifeTime;
+        set => LifeTime = value;
+    }
+    public double Rotation
+    {
+        get => Angle;
+        set => Angle = value;
+    }
 
     private static int _nextId = 0;
 
