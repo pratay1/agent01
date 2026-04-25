@@ -207,7 +207,7 @@ public class FireBehavior : BodyBehavior
             UpdateFuel(dt);
             UpdateTemperature(dt, world);
             ApplyFirePhysics(body, dt, world);
-            ApplyConvection(body, dt);
+            ApplyConvection(body, dt, world);
             ApplyRadiation(body, world);
             UpdateFlickerAndSize(dt);
             SpreadFire(body, dt, world);
@@ -268,9 +268,11 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyFirePhysics(RigidBody body, double dt, PhysicsWorld world)
     {
-        Vector2 gravityDir = world.Gravity.Normalized;
+        Vector2 antiGravity = -world.Gravity.Normalized;
         double heatForce = _currentTemperature * _activeProfile.HeatVelocityScale * body.Mass / 5000.0;
-        Vector2 flickerVec = new Vector2((Math.Sin(_flickerPhase * 3.0) * 0.2 - 0.1) * heatForce * 0.1, heatForce * 1.5) * -gravityDir;
+        double flickerX = (Math.Sin(_flickerPhase * 3.0) * 0.2 - 0.1) * heatForce * 0.1;
+        double flickerY = heatForce * 1.5;
+        Vector2 flickerVec = new Vector2((float)(flickerX * antiGravity.X), (float)(flickerY * antiGravity.Y));
         body.ApplyForce(flickerVec);
         double dragForce = body.Velocity.Length * 0.1 * body.Mass;
         body.ApplyForce(-body.Velocity.Normalized * dragForce);
@@ -283,11 +285,14 @@ public class FireBehavior : BodyBehavior
         if (heatForce > _maxHeatForce) _maxHeatForce = heatForce;
     }
 
-    private void ApplyConvection(RigidBody body, double dt)
+    private void ApplyConvection(RigidBody body, double dt, PhysicsWorld world)
     {
-        Vector2 gravityDir = world.Gravity.Normalized;
+        if (world == null) return;
+        Vector2 antiGravity = -world.Gravity.Normalized;
         double convForce = _currentTemperature / 100.0 * _activeProfile.ConvectionStrength * 0.3;
-        Vector2 convVec = new Vector2((Math.Sin(_updateStopwatch.Elapsed.TotalSeconds * 3.0 + body.Id) * 0.3 + 0.1) * convForce * 0.2, convForce * 1.5) * -gravityDir;
+        double convX = (Math.Sin(_updateStopwatch.Elapsed.TotalSeconds * 3.0 + body.Id) * 0.3 + 0.1) * convForce * 0.2;
+        double convY = convForce * 1.5;
+        Vector2 convVec = new Vector2((float)(convX * antiGravity.X), (float)(convY * antiGravity.Y));
         body.ApplyForce(convVec);
         _convectionWorkDone += convVec.Length * body.Velocity.Length * dt;
     }
