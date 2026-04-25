@@ -585,13 +585,15 @@ private const double DEFAULT_BLAST_RADIUS = 60.0;
         if (_currentState == ExplosionState.Armed || _currentState == ExplosionState.FuseBurning)
             Detonate(body, world);
 
-        SpawnFireDebrisOnCollision(body, other, world);
+        SpawnFireDebrisOnCollision(body, world);
 
         RaiseCollision(body, other);
     }
 
-    private void SpawnFireDebrisOnCollision(RigidBody body, RigidBody other, PhysicsWorld world)
+    private void SpawnFireDebrisOnCollision(RigidBody source, PhysicsWorld world)
     {
+        if (!_enableDebris) return;
+
         const int FIRE_BODY_COUNT = 10;
         const double FIRE_DEBRIS_SPEED = 200.0;
         const double FIRE_DEBRIS_RADIUS = 6.0;
@@ -599,12 +601,15 @@ private const double DEFAULT_BLAST_RADIUS = 60.0;
 
         for (int i = 0; i < FIRE_BODY_COUNT; i++)
         {
+            if (_totalDebrisSpawned >= MAX_SPAWN_DEBRIS) break;
+
             double angle = Random.Shared.NextDouble() * Math.PI * 2;
             double speed = FIRE_DEBRIS_SPEED * (0.5 + Random.Shared.NextDouble() * 0.5);
-            var velocity = new Vector2((float)(Math.Cos(angle) * speed), (float)(Math.Sin(angle) * speed));
+            var velocity = new Vector2(Math.Cos(angle) * speed, Math.Sin(angle) * speed);
 
-            var fireDebris = world.CreateBody(body.Position, FIRE_DEBRIS_RADIUS, FIRE_DEBRIS_MASS, 0.3, BodyType.Fire);
+            var fireDebris = world.CreateBody(source.Position, FIRE_DEBRIS_RADIUS, FIRE_DEBRIS_MASS, 0.3, BodyType.Fire);
             fireDebris.Velocity = velocity;
+            _totalDebrisSpawned++;
         }
     }
 

@@ -438,8 +438,9 @@ public class FireBehavior : BodyBehavior
 
     private void ClampBodyProperties(RigidBody body)
     {
-        double maxRadius = Math.Max(MIN_BURN_RADIUS, _currentRadius * MAX_RADIUS_TEMP_MULTIPLIER);
-        body.Radius = Math.Clamp(_currentRadius, MIN_BURN_RADIUS, maxRadius * 2);
+        double chosenMaxMultiplier = _activeProfile.MaxRadiusMultiplier > 0 ? _activeProfile.MaxRadiusMultiplier : MAX_BURN_RADIUS_MULTIPLIER;
+        double maxRadius = Math.Max(MIN_BURN_RADIUS, _currentRadius * chosenMaxMultiplier);
+        body.Radius = Math.Clamp(_currentRadius, MIN_BURN_RADIUS, maxRadius);
         if (body.Velocity.Length > 1000) body.Velocity = body.Velocity.Normalized * 1000;
         if (double.IsNaN(body.Position.X) || double.IsNaN(body.Position.Y))
         {

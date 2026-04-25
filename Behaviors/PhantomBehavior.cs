@@ -37,6 +37,7 @@ public class PhantomBehavior : BodyBehavior
     private const double MIN_SHAKE_STRENGTH = 1000.0;
     private const double MAX_SHAKE_FREQUENCY = 100.0;
     private const double MIN_SHAKE_FREQUENCY = 10.0;
+    private const double SHAKE_DT = 1.0 / 60.0;
 
     #endregion
 
@@ -382,7 +383,7 @@ public class PhantomBehavior : BodyBehavior
             RaisePreUpdate(body, dt);
             _lifeTime += dt;
             UpdateEnergyRegen(dt);
-            CheckForNearbyTargetsAndShake(body, dt, world);
+            CheckForNearbyTargetsAndShake(body, world);
             UpdateStateMachine(body, dt, world);
             ProcessPhasing(body, dt, world);
             ProcessTeleport(body, dt, world);
@@ -400,9 +401,9 @@ public class PhantomBehavior : BodyBehavior
         }
     }
 
-    private void CheckForNearbyTargetsAndShake(RigidBody body, double dt, PhysicsWorld world)
+    private void CheckForNearbyTargetsAndShake(RigidBody body, PhysicsWorld world)
     {
-        if (_currentState == PhantomState.Shaking || _currentState == PhantomState.Phasing)
+        if (_stateMachine.CurrentState == PhantomState.Shaking || _stateMachine.CurrentState == PhantomState.Phasing)
             return;
             
         foreach (var other in world.Bodies)
@@ -650,13 +651,13 @@ public class PhantomBehavior : BodyBehavior
             return;
         _stateMachine.LastPhaseTime = _lifeTime;
         _phaseCount++;
-        
-        if (_stateMachine.Energy >= _activeProfile.ShakeCost)
+
+        if (_stateMachine.CurrentState != PhantomState.Shaking && _stateMachine.CurrentState != PhantomState.Phasing && _stateMachine.Energy >= _activeProfile.ShakeCost)
         {
             _stateMachine.TransitionTo(PhantomState.Shaking, 0.0);
-            ApplyShake(body, other, 0.016);
+            ApplyShake(body, other, SHAKE_DT);
         }
-        
+
         LogDebug(body, $"Phantom collided with {other.Id}, phasing through");
         RaiseCollision(body, other);
     }
