@@ -10,9 +10,9 @@ namespace PhysicsSandbox;
 
 public partial class MainWindow : Window
 {
-    private readonly PhysicsWorld _world;
-    private readonly Renderer _renderer;
-    private readonly GameLoop _gameLoop;
+    private PhysicsWorld _world;
+    private Renderer _renderer;
+    private GameLoop _gameLoop;
 
     private double _canvasWidth;
     private double _canvasHeight;
@@ -63,11 +63,15 @@ public partial class MainWindow : Window
             throw;
         }
 
-        // Dynamic canvas size tracking - starts game when valid size is available
-        GameCanvas.SizeChanged += (s, e) => UpdateCanvasSize();
-        // Also call initially in case size is already valid
-        Loaded += (s, e) => UpdateCanvasSize();
+        // Setup - we'll initialize these when game starts
+        Loaded += (s, e) => OnGameLoaded();
+    }
 
+    private void OnGameLoaded()
+    {
+        // Initialize game components when window is ready
+        GameCanvas.SizeChanged += (s, e) => UpdateCanvasSize();
+        
         _world = new PhysicsWorld();
         _renderer = new Renderer();
         GameCanvas.Renderer = _renderer;
@@ -355,6 +359,18 @@ public partial class MainWindow : Window
             _world.ForceManager.Wind.Direction = new Vector2(1, 0); 
             _world.ForceManager.Wind.Strength = 200; 
         } 
+    }
+
+    private void Start2DPhysics_Click(object sender, RoutedEventArgs e)
+    {
+        TitleScreen.Visibility = Visibility.Collapsed;
+        GameUI.Visibility = Visibility.Visible;
+        StartGame();
+    }
+
+    private void Quit_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Shutdown();
     }
 
     protected override void OnClosed(EventArgs e)
