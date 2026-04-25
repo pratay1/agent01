@@ -26,7 +26,7 @@ public partial class MainWindow : Window
     private bool _isShiftSpawning = false;
     private double _shiftSpawnAccumulator = 0.0;
     private Point _shiftSpawnPosition;
-    private const double ShiftSpawnRate = 7.0; // objects per second
+    private const double ShiftSpawnRate = 14.0; // objects per second
     private const int MaxShiftSpawnsPerFrame = 10;
     
     private readonly Dictionary<BodyType, (string Name, string Color)> _bodyInfo = new()
