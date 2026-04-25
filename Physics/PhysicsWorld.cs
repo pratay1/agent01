@@ -1,14 +1,16 @@
-using System.Diagnostics.CodeAnalysis;
-using PhysicsSandbox.Behaviors;
 using PhysicsSandbox.Mathematics;
+using PhysicsSandbox.Physics;
 
 namespace PhysicsSandbox.Physics;
 
+/// <summary>
+/// Manages the physics simulation including rigid bodies, forces, collisions, and boundary constraints.
+/// Uses fixed timestep integration with interpolation-safe design.
+/// </summary>
 public class PhysicsWorld
 {
     private readonly List<RigidBody> _bodies = new();
     private readonly Dictionary<int, RigidBody> _bodyMap = new();
-    private readonly HashSet<int> _removedIds = new();
     private readonly ForceManager _forceManager;
     private Vector2 _gravity = Vector2.Down * 980;
     private double _timeScale = 1.0;
@@ -18,6 +20,9 @@ public class PhysicsWorld
     private double _leftBoundary = 0;
     private double _rightBoundary = 1280;
     private double _topBoundary = 0;
+
+    /// <summary>Total number of bodies currently in the simulation.</summary>
+    public int Count => _bodies.Count;
 
     public IReadOnlyList<RigidBody> Bodies => _bodies;
     public double GroundY
@@ -40,6 +45,9 @@ public class PhysicsWorld
         get => _topBoundary;
         set => _topBoundary = value;
     }
+    public Vector2 GravityCenter => new((float)_leftBoundary, (float)_groundY);
+    public Vector2 GravityExtents => new((float)(_rightBoundary - _leftBoundary), (float)(_groundY - _topBoundary));
+
     public ForceManager ForceManager => _forceManager;
     public Vector2 Gravity
     {
@@ -49,7 +57,7 @@ public class PhysicsWorld
     public double TimeScale
     {
         get => _timeScale;
-        set => _timeScale = System.Math.Clamp(value, 0.1, 2.0);
+        set => _timeScale = Clamp(value, 0.01, 5.0);
     }
     public bool IsPaused
     {
@@ -62,84 +70,73 @@ public class PhysicsWorld
         _forceManager = new ForceManager();
     }
 
+    /// <summary>Creates a new physics body at the specified position with given properties.</summary>
     public RigidBody CreateBody(Vector2 position, double radius, double mass, double restitution, BodyType bodyType = BodyType.Normal)
     {
         var behavior = BodyBehaviorFactory.Get(bodyType);
         var body = new RigidBody(position, radius, mass, restitution, bodyType);
-        
+
         behavior.OnCreate(body);
         _bodies.Add(body);
         _bodyMap[body.Id] = body;
         return body;
     }
 
+    /// <summary>Safely removes a body from the simulation.</summary>
     public void RemoveBody(RigidBody body)
     {
         if (_bodies.Remove(body))
         {
             _bodyMap.Remove(body.Id);
-            _removedIds.Add(body.Id);
         }
     }
 
+    /// <summary>Cleans up all bodies and resets the ID counter.</summary>
     public void Clear()
     {
         _bodies.Clear();
         _bodyMap.Clear();
-        _removedIds.Clear();
         RigidBody.ResetIdCounter();
     }
 
+    /// <summary>Reverses the direction of gravity force.</summary>
     public void ToggleGravityDirection()
     {
         _gravity = -_gravity;
         _forceManager.Gravity.SetDirection(_gravity.Normalized);
     }
 
+    /// <summary>Executes one physics simulation step with fixed timestep.</summary>
     public void Step(double dt)
     {
         if (_isPaused) return;
 
         double scaledDt = dt * _timeScale;
-        scaledDt = System.Math.Min(scaledDt, 0.05); // Max 50ms per physics step
-
-        // Clear removal tracking from previous frame
-        _removedIds.Clear();
+        scaledDt = Clamp(scaledDt, 0.001, 0.05); // Clamp to [1ms, 50ms]
 
         // 1. Apply forces (gravity, wind, explosions)
         ApplyForces(scaledDt);
 
-        // 2. Behavior updates - MUST come BEFORE integration so forces apply this frame
-        // Use snapshot to avoid concurrent modification issues
+        // 2. Behavior updates - before integration so forces apply this frame
         var bodiesSnapshot = _bodies.ToList();
         foreach (var body in bodiesSnapshot)
         {
-            // Skip bodies that have already been removed this frame
-            if (_removedIds.Contains(body.Id)) continue;
-
             var behavior = BodyBehaviorFactory.Get(body.BodyType);
-            if (behavior == null)
-            {
-                behavior = BodyBehaviorFactory.Get(BodyType.Normal);
-            }
-                
-            behavior.OnUpdate(body, dt, this);
+            behavior?.OnUpdate(body, dt, this);
         }
 
         // 3. Integrate positions from velocities
         Integrate(scaledDt);
 
-        // 4. Solve collisions
+        // 4. Solve collisions (iterative relaxation)
         SolveCollisions();
         SolveBoundaryCollisions();
 
-        // 5. Cleanup invalid bodies
+        // 5. Validate body state
         ValidateBodies();
-
-        // Clear the removed set for next frame (in case ValidateBodies didn't call RemoveBody)
-        _removedIds.Clear();
     }
 
+    /// <summary>Sets rectangular boundary for the simulation space.</summary>
     public void SetBoundaries(double left, double right, double ground)
     {
         _leftBoundary = left;
@@ -148,6 +145,7 @@ public class PhysicsWorld
         _topBoundary = 0;
     }
 
+    /// <summary>Sets rectangular boundary for the simulation space.</summary>
     public void SetBoundaries(double left, double right, double top, double ground)
     {
         _leftBoundary = left;
@@ -156,11 +154,14 @@ public class PhysicsWorld
         _groundY = ground;
     }
 
+    /// <summary>Resizes the canvas boundary based on actual control size.</summary>
     public void SetCanvasSize(double width, double height)
     {
         _rightBoundary = width;
         _groundY = height;
     }
+
+    private static double Clamp(double v, double min, double max) => v < min ? min : (v > max ? max : v);
 
     private void SolveBoundaryCollisions()
     {
@@ -168,6 +169,7 @@ public class PhysicsWorld
         {
             if (body.IsStatic) continue;
 
+            // Bottom (ground)
             double bottom = _groundY - body.Radius;
             if (body.Position.Y > bottom)
             {
@@ -178,6 +180,7 @@ public class PhysicsWorld
                 }
             }
 
+            // Left
             double left = _leftBoundary + body.Radius;
             if (body.Position.X < left)
             {
@@ -188,6 +191,7 @@ public class PhysicsWorld
                 }
             }
 
+            // Right
             double right = _rightBoundary - body.Radius;
             if (body.Position.X > right)
             {
@@ -198,6 +202,7 @@ public class PhysicsWorld
                 }
             }
 
+            // Top
             double top = body.Radius;
             if (body.Position.Y < top)
             {
@@ -243,12 +248,12 @@ public class PhysicsWorld
     private void SolveCollisions()
     {
         const int iterations = 8;
-        
+
         for (int i = 0; i < iterations; i++)
         {
             var manifolds = Collision.DetectAll(_bodies);
             if (manifolds.Count == 0) break;
-            
+
             Collision.ResolveAll(manifolds);
         }
     }
@@ -260,7 +265,6 @@ public class PhysicsWorld
             var body = _bodies[i];
             if (!body.IsValid())
             {
-                // Remove corrupted body
                 _bodies.RemoveAt(i);
                 _bodyMap.Remove(body.Id);
                 i--;
@@ -268,10 +272,11 @@ public class PhysicsWorld
         }
     }
 
+    /// <summary>Spawns a body at the specified position if the location is not occupied.</summary>
     public void SpawnAtPosition(Vector2 position, double radius, double mass, double restitution)
     {
-        if (radius < 1) radius = 20;
-        if (mass < 0.1) mass = 1;
+        radius = Math.Max(radius, 20);
+        mass = Math.Max(mass, 0.1);
 
         foreach (var existing in _bodies)
         {
@@ -284,7 +289,8 @@ public class PhysicsWorld
         CreateBody(position, radius, mass, restitution);
     }
 
-    public bool TryGetBodyById(int id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out RigidBody? body)
+    /// <summary>Attempts to retrieve a body by its unique identifier.</summary>
+    public bool TryGetBodyById(int id, out RigidBody? body)
     {
         return _bodyMap.TryGetValue(id, out body);
     }
