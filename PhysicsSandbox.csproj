@@ -8,4 +8,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS0414;CS0649;CS0108;CS0618;CS8625;CS8604;CS8618;CS8600;CS0162</NoWarn>
+  </PropertyGroup>
+
 </Project>

@@ -117,8 +117,9 @@
     </Window.Resources>
     
     <Grid>
-        <!-- Define grid rows: Top controls (auto), Main content (*), Bottom help (auto) -->
+        <!-- Define grid rows: Main menu (auto), Body selector (auto), Main content (*), Bottom help (auto) -->
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -130,15 +131,55 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
+        <!-- Main menu bar at top -->
+        <Border Grid.Row="0" 
+                Grid.ColumnSpan="2"
+                Background="#0A0A0A" 
+                BorderBrush="#1A1A1A"
+                BorderThickness="0,0,0,1"
+                Padding="24,12">
+            <DockPanel>
+                <!-- Title on left -->
+                <TextBlock Text="Physics Agent" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" FontFamily="Consolas" VerticalAlignment="Center"/>
+                
+                <!-- Spacer -->
+                <Border/>
+                
+                <!-- Main menu buttons on right -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="2D Physics Sandbox" 
+                            Padding="16,8" 
+                            Background="#1E1E1E" 
+                            Foreground="#FFFFFF" 
+                            BorderBrush="#2D2D2D" 
+                            BorderThickness="1"
+                            FontFamily="Consolas"
+                            FontSize="12"
+                            Cursor="Hand"
+                            Margin="0,0,12,0"/>
+                    <Button Content="3D Ragdoll Training (Coming Soon)" 
+                            IsEnabled="False"
+                            Padding="16,8" 
+                            Background="#1A1A1A" 
+                            Foreground="#555555" 
+                            BorderBrush="#252525" 
+                            BorderThickness="1"
+                            FontFamily="Consolas"
+                            FontSize="12"
+                            Cursor="Hand"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+        
         <!-- Main canvas - takes up main content area -->
         <local:PhysicsCanvas x:Name="GameCanvas" 
-                             Grid.Row="1" 
+                             Grid.Row="2" 
                              Grid.Column="1" 
                              ClipToBounds="True" 
                              Background="#0D0D0D"/>
         
-        <!-- Top bar: title left, controls right -->
-        <Border Grid.Row="0" 
+        <!-- Top bar with subtitle, controls - now row 1 -->
+        <Border Grid.Row="1" 
                 Grid.ColumnSpan="2"
                 Background="Transparent" 
                 Padding="24,16">
@@ -192,15 +233,16 @@
             </DockPanel>
         </Border>
         
-        <!-- Left sidebar: body type selector -->
-        <Border Grid.Row="1"
+        <!-- Left sidebar: body type selector - now in row 2 -->
+        <Border Grid.Row="2"
                 Grid.Column="0"
                 Background="#121212" 
                 BorderBrush="#1A1A1A" 
                 BorderThickness="0,0,1,0"
                 Padding="24" 
                 VerticalAlignment="Stretch">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent" Padding="0">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden" Background="Transparent" Padding="0"
+                      CanContentScroll="True">
                 <StackPanel>
                     <TextBlock Text="BODY TYPES" Style="{StaticResource SidebarHeader}"/>
                     
@@ -241,8 +283,8 @@
             </ScrollViewer>
         </Border>
         
-        <!-- Bottom center: help text & controls legend -->
-        <Border Grid.Row="2"
+        <!-- Bottom center: help text & controls legend - now row 3 -->
+        <Border Grid.Row="3"
                 Grid.ColumnSpan="2"
                 Background="Transparent" 
                 Padding="24,12" 
@@ -251,8 +293,8 @@
                        Text="LMB: SPAWN | RMB: EXPLODE | SPACE: PAUSE | C: CLEAR | G: GRAVITY | W: WIND | +/- : SPEED"/>
         </Border>
         
-        <!-- Top right corner: FPS counter (optional) -->
-        <Border Grid.Row="0"
+        <!-- Top right corner: FPS counter - now in row 1 (subtitle bar) -->
+        <Border Grid.Row="1"
                 Grid.Column="1"
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top" 
