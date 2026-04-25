@@ -1,6 +1,7 @@
 using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
 using PhysicsSandbox.Behaviors;
+using System.Diagnostics;
 
 namespace PhysicsSandbox.Physics;
 
@@ -21,6 +22,8 @@ public class PhysicsWorld
     private double _leftBoundary = 0;
     private double _rightBoundary = 1280;
     private double _topBoundary = 0;
+    private int _bodyIdCounter = 0;
+    private Stopwatch _physicsStopwatch = new();
 
     /// <summary>Total number of bodies currently in the simulation.</summary>
     public int Count => _bodies.Count;
@@ -74,21 +77,38 @@ public class PhysicsWorld
     /// <summary>Creates a new physics body at the specified position with given properties.</summary>
     public RigidBody CreateBody(Vector2 position, double radius, double mass, double restitution, BodyType bodyType = BodyType.Normal)
     {
-        var behavior = BodyBehaviorFactory.Get(bodyType);
-        var body = new RigidBody(position, radius, mass, restitution, bodyType);
+        try
+        {
+            var behavior = BodyBehaviorFactory.Get(bodyType);
+            var body = new RigidBody(position, radius, mass, restitution, bodyType);
 
-        behavior.OnCreate(body);
-        _bodies.Add(body);
-        _bodyMap[body.Id] = body;
-        return body;
+            behavior.OnCreate(body);
+            _bodies.Add(body);
+            _bodyMap[body.Id] = body;
+            Logger.LogDebug($"Created body {body.Id} (type: {bodyType}, pos: {position}, r: {radius}, m: {mass})");
+            return body;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Failed to create body at {position} (type: {bodyType})", ex);
+            throw;
+        }
     }
 
     /// <summary>Safely removes a body from the simulation.</summary>
     public void RemoveBody(RigidBody body)
     {
-        if (_bodies.Remove(body))
+        try
         {
-            _bodyMap.Remove(body.Id);
+            if (_bodies.Remove(body))
+            {
+                _bodyMap.Remove(body.Id);
+                Logger.LogDebug($"Removed body {body.Id} (type: {body.BodyType})");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Failed to remove body {body.Id}", ex);
         }
     }
 
@@ -112,29 +132,50 @@ public class PhysicsWorld
     {
         if (_isPaused) return;
 
+        _physicsStopwatch.Restart();
         double scaledDt = dt * _timeScale;
         scaledDt = Clamp(scaledDt, 0.001, 0.05); // Clamp to [1ms, 50ms]
 
-        // 1. Apply forces (gravity, wind, explosions)
-        ApplyForces(scaledDt);
-
-        // 2. Behavior updates - before integration so forces apply this frame
-        var bodiesSnapshot = _bodies.ToList();
-        foreach (var body in bodiesSnapshot)
+        try
         {
-            var behavior = BodyBehaviorFactory.Get(body.BodyType);
-            behavior?.OnUpdate(body, dt, this);
+            // 1. Apply forces (gravity, wind, explosions)
+            ApplyForces(scaledDt);
+
+            // 2. Behavior updates - before integration so forces apply this frame
+            var bodiesSnapshot = _bodies.ToList();
+            foreach (var body in bodiesSnapshot)
+            {
+                try
+                {
+                    var behavior = BodyBehaviorFactory.Get(body.BodyType);
+                    behavior?.OnUpdate(body, dt, this);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Behavior update failed for body {body.Id} (type: {body.BodyType})", ex);
+                }
+            }
+
+            // 3. Integrate positions from velocities
+            Integrate(scaledDt);
+
+            // 4. Solve collisions (iterative relaxation)
+            SolveCollisions();
+            SolveBoundaryCollisions();
         }
-
-        // 3. Integrate positions from velocities
-        Integrate(scaledDt);
-
-        // 4. Solve collisions (iterative relaxation)
-        SolveCollisions();
-        SolveBoundaryCollisions();
+        catch (Exception ex)
+        {
+            Logger.LogError($"Physics step failed at dt={dt}, scaledDt={scaledDt}, bodies={_bodies.Count}", ex);
+        }
 
         // 5. Validate body state
         ValidateBodies();
+
+        _physicsStopwatch.Stop();
+        if (_physicsStopwatch.ElapsedMilliseconds > 10)
+        {
+            Logger.LogWarning($"Physics step took {_physicsStopwatch.ElapsedMilliseconds}ms (threshold: 10ms)");
+        }
     }
 
     /// <summary>Sets rectangular boundary for the simulation space.</summary>
@@ -266,6 +307,7 @@ public class PhysicsWorld
             var body = _bodies[i];
             if (!body.IsValid())
             {
+                Logger.LogWarning($"Removing invalid body {body.Id} (type: {body.BodyType}, pos: {body.Position}, vel: {body.Velocity})");
                 _bodies.RemoveAt(i);
                 _bodyMap.Remove(body.Id);
                 i--;

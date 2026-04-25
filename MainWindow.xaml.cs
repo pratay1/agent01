@@ -55,11 +55,13 @@ public partial class MainWindow : Window
         
         try
         {
+            Logger.LogInfo("Starting main window initialization");
             InitializeComponent();
+            Logger.LogInfo("Main window initialized successfully");
         }
         catch (Exception ex)
         {
-            DebugLog.LogError("InitializeComponent failed", ex);
+            Logger.LogError("InitializeComponent failed", ex);
             throw;
         }
 
@@ -69,17 +71,28 @@ public partial class MainWindow : Window
 
     private void OnGameLoaded()
     {
-        // Initialize game components when window is ready
-        GameCanvas.SizeChanged += (s, e) => UpdateCanvasSize();
-        
-        _world = new PhysicsWorld();
-        _renderer = new Renderer();
-        GameCanvas.Renderer = _renderer;
-        _gameLoop = new GameLoop(OnUpdate, OnRender, 60.0);
-
-        SetupInput();
-        InitializeBodyTypeButtons();
-        SelectBody(BodyType.Normal);
+        try
+        {
+            Logger.LogInfo("Game loaded, initializing components");
+            // Initialize game components when window is ready
+            GameCanvas.SizeChanged += (s, e) => UpdateCanvasSize();
+            
+            _world = new PhysicsWorld();
+            _renderer = new Renderer();
+            GameCanvas.Renderer = _renderer;
+            _gameLoop = new GameLoop(OnUpdate, OnRender, 60.0);
+            
+            SetupInput();
+            InitializeBodyTypeButtons();
+            SelectBody(BodyType.Normal);
+            
+            Logger.LogInfo("Game components initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Failed to initialize game components", ex);
+            throw;
+        }
     }
 
     private bool _gameStarted = false;
