@@ -194,7 +194,7 @@
                 </StackPanel>
                 
                 <!-- Footer -->
-                <TextBlock Text="Created with Kilo Agent" 
+                <TextBlock Text="created by pratay and kilo agent" 
                           FontSize="10" 
                           Foreground="#444444" 
                           FontFamily="Consolas"

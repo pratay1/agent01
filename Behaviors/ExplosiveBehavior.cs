@@ -11,15 +11,14 @@ public class ExplosiveBehavior : BodyBehavior
 {
     #region Constants & Tunable Parameters
 
-    private const double DEFAULT_BLAST_RADIUS = 150.0;
-    private const double DEFAULT_BLAST_FORCE = 15000.0;
-    private const int DEFAULT_DEBRIS_COUNT = 12;
+private const double DEFAULT_BLAST_RADIUS = 60.0;
+    private const double DEFAULT_BLAST_FORCE = 8000.0;
+    private const int DEFAULT_DEBRIS_COUNT = 8;
     private const double DEFAULT_FUSE_TIME = 0.0;
-    private const double MAX_BLAST_FORCE = 100000.0;
-    private const double MIN_DEBRIS_SPEED = 200.0;
-    private const double MAX_DEBRIS_SPEED = 500.0;
-    private const int MAX_CHAIN_REACTIONS = 5;
-    private const double CHAIN_REACTION_RADIUS = 100.0;
+    private const double MIN_DEBRIS_SPEED = 150.0;
+    private const double MAX_DEBRIS_SPEED = 400.0;
+    private const int MAX_CHAIN_REACTIONS = 3;
+    private const double CHAIN_REACTION_RADIUS = 60.0;
     private const double BLAST_FALLOFF_EXPONENT = 2.0;
     private const int MAX_DEBRIS_TRACKING = 100;
     private const double SHOCKWAVE_SPEED = 300.0;

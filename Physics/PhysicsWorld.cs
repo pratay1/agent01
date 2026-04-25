@@ -17,6 +17,7 @@ public class PhysicsWorld
     private double _groundY = 600;
     private double _leftBoundary = 0;
     private double _rightBoundary = 1280;
+    private double _topBoundary = 0;
 
     public IReadOnlyList<RigidBody> Bodies => _bodies;
     public double GroundY
@@ -33,6 +34,11 @@ public class PhysicsWorld
     {
         get => _rightBoundary;
         set => _rightBoundary = value;
+    }
+    public double TopBoundary
+    {
+        get => _topBoundary;
+        set => _topBoundary = value;
     }
     public ForceManager ForceManager => _forceManager;
     public Vector2 Gravity
@@ -139,6 +145,21 @@ public class PhysicsWorld
         _leftBoundary = left;
         _rightBoundary = right;
         _groundY = ground;
+        _topBoundary = 0;
+    }
+
+    public void SetBoundaries(double left, double right, double top, double ground)
+    {
+        _leftBoundary = left;
+        _rightBoundary = right;
+        _topBoundary = top;
+        _groundY = ground;
+    }
+
+    public void SetCanvasSize(double width, double height)
+    {
+        _rightBoundary = width;
+        _groundY = height;
     }
 
     private void SolveBoundaryCollisions()
