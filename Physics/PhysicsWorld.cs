@@ -1,5 +1,6 @@
 using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
+using PhysicsSandbox.Behaviors;
 
 namespace PhysicsSandbox.Physics;
 
