@@ -34,8 +34,12 @@ public struct Vector2
     public static Vector2 operator *(Vector2 a, double s) => new(a.X * s, a.Y * s);
     public static Vector2 operator *(double s, Vector2 a) => new(a.X * s, a.Y * s);
     public static Vector2 operator /(Vector2 a, double s) => new(a.X / s, a.Y / s);
-    public static bool operator ==(Vector2 a, Vector2 b) => a.X == b.X && a.Y == b.Y;
-    public static bool operator !=(Vector2 a, Vector2 b) => a.X != b.X || a.Y != b.Y;
+    public static bool operator ==(Vector2 a, Vector2 b)
+    {
+        const double epsilon = 1e-10;
+        return System.Math.Abs(a.X - b.X) < epsilon && System.Math.Abs(a.Y - b.Y) < epsilon;
+    }
+    public static bool operator !=(Vector2 a, Vector2 b) => !(a == b);
 
     public static double Dot(Vector2 a, Vector2 b) => a.X * b.X + a.Y * b.Y;
     public static double Distance(Vector2 a, Vector2 b) => (a - b).Length;
@@ -46,7 +50,12 @@ public struct Vector2
 
     public Vector2 Perpendicular() => new(-Y, X);
 
-    public override bool Equals(object? obj) => obj is Vector2 v && this == v;
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Vector2 v) return false;
+        const double epsilon = 1e-10;
+        return System.Math.Abs(X - v.X) < epsilon && System.Math.Abs(Y - v.Y) < epsilon;
+    }
     public override int GetHashCode() => HashCode.Combine(X, Y);
     public override string ToString() => $"({X:F2}, {Y:F2})";
 }

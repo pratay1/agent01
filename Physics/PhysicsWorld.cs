@@ -113,7 +113,9 @@ public class PhysicsWorld
 
             var behavior = BodyBehaviorFactory.Get(body.BodyType);
             if (behavior == null)
+            {
                 behavior = BodyBehaviorFactory.Get(BodyType.Normal);
+            }
                 
             behavior.OnUpdate(body, dt, this);
         }

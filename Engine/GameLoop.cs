@@ -54,7 +54,7 @@ public class GameLoop
         _lastTime = currentTime;
 
         // Cap max frame time to prevent spiral of death
-        if (frameTime > 0.25) frameTime = 0.25;
+        if (frameTime > 0.1) frameTime = 0.1;
         
         _accumulator += frameTime;
 

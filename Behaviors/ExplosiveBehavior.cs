@@ -507,7 +507,7 @@ public class ExplosiveBehavior : BodyBehavior
                 _peakBlastForce = appliedForce;
 
             if (other.BodyType == BodyType.Explosive && other.Behavior is ExplosiveBehavior otherExplosive)
-                otherExplosive.TriggerChainReaction(world);
+                otherExplosive.TriggerChainReaction(world, other);
         }
     }
 
@@ -522,8 +522,8 @@ public class ExplosiveBehavior : BodyBehavior
         {
             if (_totalDebrisSpawned >= MAX_SPAWN_DEBRIS) break;
 
-            double angle = _rand.NextDouble() * spread - spread / 2;
-            double speed = MIN_DEBRIS_SPEED + _rand.NextDouble() * (MAX_DEBRIS_SPEED - MIN_DEBRIS_SPEED);
+            double angle = Random.Shared.NextDouble() * spread - spread / 2;
+            double speed = MIN_DEBRIS_SPEED + Random.Shared.NextDouble() * (MAX_DEBRIS_SPEED - MIN_DEBRIS_SPEED);
             var vel = new Vector2(Math.Cos(angle) * speed, Math.Sin(angle) * speed);
 
             var debris = world.CreateBody(source.Position, debrisRadius, debrisMass, 0.5, _activeProfile.DebrisType);
@@ -655,7 +655,7 @@ public class ExplosiveBehavior : BodyBehavior
 
     #region Chain Reaction System
 
-    private void TriggerChainReaction(PhysicsWorld world)
+    public void TriggerChainReaction(PhysicsWorld world, RigidBody triggerBody)
     {
         if (!_activeProfile.ChainReactionEnabled || !_enableChainReactions) return;
         if (_stateMachine.ChainReactionCount >= MAX_CHAIN_REACTIONS) return;
@@ -669,7 +669,7 @@ public class ExplosiveBehavior : BodyBehavior
             if (other == null || other.IsStatic) continue;
             if (reactions >= MAX_CHAIN_REACTIONS) break;
 
-            if (other.Behavior is ExplosiveBehavior otherExplosive && !otherExplosive._hasDetonated)
+            if (other.Behavior is ExplosiveBehavior otherExplosive && !otherExplosive.HasDetonated())
             {
                 otherExplosive.Detonate(other, world);
                 reactions++;
@@ -712,7 +712,7 @@ public class ExplosiveBehavior : BodyBehavior
             {
                 Type = ParticleEffectType.Spark,
                 Position = position,
-                Velocity = new Vector2((float)(_rand.NextDouble() * 200 - 100), (float)(_rand.NextDouble() * 200 - 100)),
+                Velocity = new Vector2((float)(Random.Shared.NextDouble() * 200 - 100), (float)(Random.Shared.NextDouble() * 200 - 100)),
                 Intensity = 0.5
             });
         }
@@ -1051,8 +1051,6 @@ public class ExplosiveBehavior : BodyBehavior
     #endregion
 
     #region Utility & Helper Methods
-
-    private static readonly Random _rand = new();
 
     public string GetDiagnosticsReport(RigidBody body)
     {

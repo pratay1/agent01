@@ -17,7 +17,7 @@ public class Renderer
     private static readonly Dictionary<BodyType, Brush> _bodyBrushes = new();
     private static readonly Dictionary<BodyType, Pen> _bodyPens = new();
     private static readonly Dictionary<BodyType, Brush> _particleBrushes = new();
-    private static readonly Random _rand = new Random();
+    private static readonly Random _rand = new(12345);
 
     static Renderer()
     {

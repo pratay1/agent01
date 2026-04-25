@@ -38,9 +38,8 @@ public static class Collision
         double distance = System.Math.Sqrt(distanceSq);
         if (distance < 0.0001)
         {
-            // Use random direction for perfectly overlapping bodies
-            var rng = new Random();
-            double angle = rng.NextDouble() * System.Math.PI * 2;
+            // Use deterministic direction for perfectly overlapping bodies
+            double angle = Random.Shared.NextDouble() * System.Math.PI * 2;
             return new Manifold(a, b, new Vector2(System.Math.Cos(angle), System.Math.Sin(angle)), radiusSum);
         }
 

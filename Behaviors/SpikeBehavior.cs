@@ -352,8 +352,11 @@ public class SpikeBehavior : BodyBehavior
 
         Vector2 normal = (body.Position - other.Position).Normalized;
         double bounceForce = 3000.0;
-        body.ApplyImpulse(normal * bounceForce / body.Mass);
-        other.ApplyImpulse(-normal * bounceForce / other.Mass);
+        
+        double bodyMass = body.Mass > 0 ? body.Mass : 1;
+        double otherMass = other.Mass > 0 ? other.Mass : 1;
+        body.ApplyImpulse(normal * bounceForce / bodyMass);
+        other.ApplyImpulse(-normal * bounceForce / otherMass);
 
         ApplyDamage(body, other);
         TriggerExplosion(body, world);
