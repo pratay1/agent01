@@ -97,6 +97,30 @@ public partial class MainWindow : Window
         }
     }
 
+    private string GetBodyTypeDescription()
+    {
+        return _selectedBodyType switch
+        {
+            BodyType.Normal => "Standard physics body. Basic collision with normal bounce.",
+            BodyType.Bouncy => "Super bouncy! Collides with all bodies and bounces with high restitution. Great for ricochets.",
+            BodyType.Heavy => "Massive weight! Pushes lighter bodies around on impact. High mass reduces velocity change.",
+            BodyType.Explosive => "BOOM! Explodes on contact with any body, creating a radial blast force.",
+            BodyType.Repulsor => "Pushes everything away with strong repulsive force. Creates an anti-gravity field.",
+            BodyType.GravityWell => "Attracts nearby bodies with gravitational pull. Like a mini black hole that pulls things in.",
+            BodyType.Turbo => "Accelerates continuously in direction of movement. Goes supersonic fast!",
+            BodyType.Phantom => "Phases through walls and bounces off bodies. Applies strong shake force on collision.",
+            BodyType.Spike => "Bouncy with explosive contact. Spawns debris shards on impact radially.",
+            BodyType.Glue => "Sticks to first body it touches. Bonds two bodies together permanently.",
+            BodyType.Plasma => "Zaps nearby bodies with electric chains. Creates lightning arcs to closest targets.",
+            BodyType.BlackHole => "Sucks in everything with extreme gravity. Grows larger as it consumes bodies!",
+            BodyType.Lightning => "Zaps nearest body with electric force. Chain lightning can jump between targets.",
+            BodyType.Fire => "Rising flames that disappear after 3 seconds. No direct collision effects.",
+            BodyType.Angel => "Flies periodically with gentle upward force. Very light mass.",
+            BodyType.Molly => "Explodes on contact unless Angel is nearby. Attracts and latches to Angel bodies.",
+            _ => "Unknown body type"
+        };
+    }
+
     private void SelectBody(BodyType type)
     {
         _selectedBodyType = type;
@@ -108,6 +132,7 @@ public partial class MainWindow : Window
         var (name, colorHex) = _bodyInfo[_selectedBodyType];
         SelectedBodyName.Text = name;
         SelectedBodyColor.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
+        DescriptionText.Text = GetBodyTypeDescription();
 
         // Update button states: selected uses body color, unselected are muted
         foreach (BodyType type in Enum.GetValues<BodyType>())
