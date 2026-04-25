@@ -15,8 +15,8 @@ public class RepulsorBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        const float repulsionRadius = 200f;
-        const float repulsionStrength = 8000f;
+        const float repulsionRadius = 300f;
+        const float repulsionStrength = 80000f;
 
         var bodies = world.Bodies.ToList(); // Snapshot
         foreach (var other in bodies)

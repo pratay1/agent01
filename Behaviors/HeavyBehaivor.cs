@@ -499,7 +499,7 @@ public class HeavyBehavior : BodyBehavior
 
     private void ApplyEnhancedGravity(RigidBody body, PhysicsWorld world)
     {
-        double gravityScale = 1.0 + (_density / MAXIMUM_DENSITY) * 0.5;
+        double gravityScale = 2.0 + (_density / MAXIMUM_DENSITY) * 3.0;
         body.ApplyForce(world.Gravity * (float)gravityScale * body.Mass);
     }
 

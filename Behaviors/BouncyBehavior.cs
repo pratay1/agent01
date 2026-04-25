@@ -656,10 +656,10 @@ public class BouncyBehavior : BodyBehavior
             double decayFactor = Math.Pow(_activeProfile.DampingDecay, dt * 60);
             body.Velocity *= decayFactor;
 
-            if (!_isInVacuum)
+            if (!_isInVacuum && body.Velocity.Length > 50)
             {
-                double airDamping = 1.0 - (AIR_RESISTANCE_BOUNCE_DAMPING * body.Velocity.Length);
-                body.Velocity *= Math.Max(0.5, airDamping);
+                double airDamping = 1.0 - (AIR_RESISTANCE_BOUNCE_DAMPING * body.Velocity.Length * 0.01);
+                body.Velocity *= Math.Max(0.8, airDamping);
             }
         }
     }

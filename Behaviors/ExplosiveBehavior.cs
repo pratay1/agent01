@@ -585,7 +585,27 @@ private const double DEFAULT_BLAST_RADIUS = 60.0;
         if (_currentState == ExplosionState.Armed || _currentState == ExplosionState.FuseBurning)
             Detonate(body, world);
 
+        SpawnFireDebrisOnCollision(body, other, world);
+
         RaiseCollision(body, other);
+    }
+
+    private void SpawnFireDebrisOnCollision(RigidBody body, RigidBody other, PhysicsWorld world)
+    {
+        const int FIRE_BODY_COUNT = 10;
+        const double FIRE_DEBRIS_SPEED = 200.0;
+        const double FIRE_DEBRIS_RADIUS = 6.0;
+        const double FIRE_DEBRIS_MASS = 2.0;
+
+        for (int i = 0; i < FIRE_BODY_COUNT; i++)
+        {
+            double angle = Random.Shared.NextDouble() * Math.PI * 2;
+            double speed = FIRE_DEBRIS_SPEED * (0.5 + Random.Shared.NextDouble() * 0.5);
+            var velocity = new Vector2((float)(Math.Cos(angle) * speed), (float)(Math.Sin(angle) * speed));
+
+            var fireDebris = world.CreateBody(body.Position, FIRE_DEBRIS_RADIUS, FIRE_DEBRIS_MASS, 0.3, BodyType.Fire);
+            fireDebris.Velocity = velocity;
+        }
     }
 
     private void CheckCollisionDetonation(RigidBody body, double dt, PhysicsWorld world)

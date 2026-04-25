@@ -171,7 +171,7 @@
                           Margin="0,0,0,60"/>
                 
                 <!-- Subtitle -->
-                <TextBlock Text="A 2D Physics Sandbox" 
+                <TextBlock Text="a physics sandbox" 
                           FontSize="18" 
                           Foreground="#4FC3F7" 
                           FontFamily="Consolas"

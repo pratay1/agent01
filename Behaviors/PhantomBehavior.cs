@@ -382,6 +382,7 @@ public class PhantomBehavior : BodyBehavior
             RaisePreUpdate(body, dt);
             _lifeTime += dt;
             UpdateEnergyRegen(dt);
+            CheckForNearbyTargetsAndShake(body, dt, world);
             UpdateStateMachine(body, dt, world);
             ProcessPhasing(body, dt, world);
             ProcessTeleport(body, dt, world);
@@ -396,6 +397,27 @@ public class PhantomBehavior : BodyBehavior
         {
             _updateStopwatch.Stop();
             RecordPerformanceMetric("OnUpdate", _updateStopwatch.Elapsed.TotalMilliseconds);
+        }
+    }
+
+    private void CheckForNearbyTargetsAndShake(RigidBody body, double dt, PhysicsWorld world)
+    {
+        if (_currentState == PhantomState.Shaking || _currentState == PhantomState.Phasing)
+            return;
+            
+        foreach (var other in world.Bodies)
+        {
+            if (body == other || other.IsStatic)
+                continue;
+                
+            double dist = Vector2.Distance(body.Position, other.Position);
+            double phaseDist = body.Radius + other.Radius + _activeProfile.PhaseDistance;
+            
+            if (dist < phaseDist && _stateMachine.Energy >= _activeProfile.ShakeCost)
+            {
+                _stateMachine.TransitionTo(PhantomState.Shaking, 0.0);
+                break;
+            }
         }
     }
 
@@ -628,6 +650,13 @@ public class PhantomBehavior : BodyBehavior
             return;
         _stateMachine.LastPhaseTime = _lifeTime;
         _phaseCount++;
+        
+        if (_stateMachine.Energy >= _activeProfile.ShakeCost)
+        {
+            _stateMachine.TransitionTo(PhantomState.Shaking, 0.0);
+            ApplyShake(body, other, 0.016);
+        }
+        
         LogDebug(body, $"Phantom collided with {other.Id}, phasing through");
         RaiseCollision(body, other);
     }
