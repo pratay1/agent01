@@ -221,28 +221,47 @@
                 <DockPanel>
                     <TextBlock Text="PHYSICS SANDBOX" Style="{StaticResource TitleText}"/>
                     <Border Width="40"/>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Right">
-                        <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,16,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse x:Name="SelectedBodyColor" Width="16" Height="16" StrokeThickness="0"/>
-                                <TextBlock x:Name="SelectedBodyName" Text="Normal" Style="{StaticResource TitleText}" FontSize="14" Margin="8,0,0,0"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Width="1" Background="#2D2D2D" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                        <TextBlock x:Name="StatusText" Text="0 bodies" Style="{StaticResource StatusText}"/>
-<Border Width="16"/>
-                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                             <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,8,0">
-                                 <TextBlock x:Name="DescriptionText" Text="Standard physics body" Style="{StaticResource HelpText}" Foreground="#888888" MaxWidth="400" TextWrapping="Wrap"/>
-                             </Border>
-                         </StackPanel>
-                        <Border Width="16"/>
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="ClearButton" Content="CLEAR" Click="ClearButton_Click" Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
-                            <Button x:Name="PauseButton" Content="PAUSE" Click="PauseButton_Click" Style="{StaticResource ActionButton}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </DockPanel>
+<Grid x:Name="TopRightContainer" HorizontalAlignment="Right" VerticalAlignment="Center">
+    <StackPanel x:Name="BodyBarPanel" Orientation="Horizontal" VerticalAlignment="Center">
+        <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,16,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse x:Name="SelectedBodyColor" Width="16" Height="16" StrokeThickness="0"/>
+                <TextBlock x:Name="SelectedBodyName" Text="Normal" Style="{StaticResource TitleText}" FontSize="14" Margin="8,0,0,0"/>
+            </StackPanel>
+        </Border>
+        <Border Width="1" Background="#2D2D2D" VerticalAlignment="Center" Margin="0,0,16,0"/>
+        <TextBlock x:Name="StatusText" Text="0 bodies" Style="{StaticResource StatusText}"/>
+        <Border Width="16"/>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,8,0">
+                <TextBlock x:Name="DescriptionText" Text="Standard physics body" Style="{StaticResource HelpText}" Foreground="#888888" MaxWidth="400" TextWrapping="Wrap"/>
+            </Border>
+        </StackPanel>
+        <Border Width="16"/>
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="ClearButton" Content="CLEAR" Click="ClearButton_Click" Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
+            <Button x:Name="PauseButton" Content="PAUSE" Click="PauseButton_Click" Style="{StaticResource ActionButton}"/>
+        </StackPanel>
+    </StackPanel>
+    <!-- Settings panel (hidden by default) -->
+    <StackPanel x:Name="SettingsBarPanel" Orientation="Vertical" Visibility="Collapsed" VerticalAlignment="Center">
+        <CheckBox x:Name="WindCheckBox" Content="Enable Wind" IsChecked="False" Checked="WindCheckBox_Checked" Unchecked="WindCheckBox_Unchecked"/>
+        <CheckBox x:Name="FPSCheckBox" Content="Show FPS Counter" IsChecked="True" Checked="FPSCheckBox_Checked" Unchecked="FPSCheckBox_Unchecked"/>
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <TextBlock Text="Shift Spawn Rate:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+            <Slider x:Name="ShiftSpawnRateSlider" Minimum="1" Maximum="30" Value="14" Width="120" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ShiftSpawnRateSlider_ValueChanged" Margin="8,0,0,0"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <TextBlock Text="Max Shift Spawns:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+            <Slider x:Name="MaxShiftSpawnsSlider" Minimum="1" Maximum="20" Value="10" Width="120" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="MaxShiftSpawnsSlider_ValueChanged" Margin="8,0,0,0"/>
+        </StackPanel>
+        <!-- Placeholder settings -->
+        <CheckBox Content="Enable Gravity" IsChecked="True" IsEnabled="False"/>
+        <CheckBox Content="Show Body Names" IsChecked="True" IsEnabled="False"/>
+    </StackPanel>
+</Grid>
+                <Button x:Name="SettingsToggleButton" Content="⚙" Width="32" Height="32" Click="SettingsToggleButton_Click" DockPanel.Dock="Right" Margin="8,0,0,0"/>
+</DockPanel>
             </Border>
             
             <!-- Left sidebar -->

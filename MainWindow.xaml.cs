@@ -23,11 +23,12 @@ public partial class MainWindow : Window
     private bool _isPaused = false;
     
     // Shift-click spawning
-    private bool _isShiftSpawning = false;
+    private bool _isShiftSpawning = false; // shift-click rapid spawning
+private bool _settingsVisible = false; // toggle for settings panel
     private double _shiftSpawnAccumulator = 0.0;
     private Point _shiftSpawnPosition;
-    private const double ShiftSpawnRate = 14.0; // objects per second
-    private const int MaxShiftSpawnsPerFrame = 10;
+    private double _shiftSpawnRate = 14.0; // objects per second (mutable via settings)
+    private int _maxShiftSpawnsPerFrame = 10; // mutable via settings
     
     private readonly Dictionary<BodyType, (string Name, string Color)> _bodyInfo = new()
     {
@@ -193,7 +194,16 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
+    private void SettingsToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _settingsVisible = !_settingsVisible;
+            // Toggle visibility of panels
+            BodyBarPanel.Visibility = _settingsVisible ? Visibility.Collapsed : Visibility.Visible;
+            SettingsBarPanel.Visibility = _settingsVisible ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // Existing Body type button click handler
+        private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is System.Windows.Controls.Button btn && btn.Tag is string tag)
         {
@@ -320,9 +330,9 @@ public partial class MainWindow : Window
             if (_isShiftSpawning)
             {
                 _shiftSpawnAccumulator += dt;
-                double spawnInterval = 1.0 / ShiftSpawnRate; // ~0.333 seconds
+                double spawnInterval = 1.0 / _shiftSpawnRate; // ~0.333 seconds
                 int spawnsThisFrame = 0;
-                while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < MaxShiftSpawnsPerFrame)
+                while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < _maxShiftSpawnsPerFrame)
                 {
                     SpawnBody(_shiftSpawnPosition);
                     _shiftSpawnAccumulator -= spawnInterval;
@@ -373,6 +383,15 @@ public partial class MainWindow : Window
             _world.ForceManager.Wind.Strength = 200; 
         } 
     }
+
+    // Settings handlers
+    private void WindCheckBox_Checked(object sender, RoutedEventArgs e) => _world.ForceManager.Wind.IsActive = true;
+    private void WindCheckBox_Unchecked(object sender, RoutedEventArgs e) => _world.ForceManager.Wind.IsActive = false;
+    private void FPSCheckBox_Checked(object sender, RoutedEventArgs e) => FPSCounter.Visibility = Visibility.Visible;
+    private void FPSCheckBox_Unchecked(object sender, RoutedEventArgs e) => FPSCounter.Visibility = Visibility.Collapsed;
+    private void ShiftSpawnRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _shiftSpawnRate = e.NewValue;
+    private void MaxShiftSpawnsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _maxShiftSpawnsPerFrame = (int)Math.Round(e.NewValue);
+
 
     private void Start2DPhysics_Click(object sender, RoutedEventArgs e)
     {

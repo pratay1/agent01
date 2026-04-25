@@ -26,7 +26,7 @@ public class GameLoop
         
         _timer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(1)
+            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS timing
         };
         _timer.Tick += (s, e) => Tick();
     }
