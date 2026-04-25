@@ -156,7 +156,7 @@ public class FireBehavior : BodyBehavior
     public override string Name => $"{_activeProfile.Name} Fire";
     public override string Description => $"{_activeProfile.Name} fire burning at {_currentTemperature:F0}K";
     public override string ColorHex => _activeProfile.CoreColorHex;
-    public override double DefaultRadius => Math.Max(MIN_BURN_RADIUS, _activeProfile.MinimumRadius);
+    public override double DefaultRadius => Math.Max(MIN_BURN_RADIUS, _activeProfile.MinimumRadius) * 0.4;
     public override double DefaultMass => Math.Clamp(_activeProfile.BaseHeat / 200.0, 0.5, 50.0);
     public override double DefaultRestitution => 0.1;
 
@@ -268,8 +268,9 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyFirePhysics(RigidBody body, double dt, PhysicsWorld world)
     {
-        double heatForce = _currentTemperature * _activeProfile.HeatVelocityScale * body.Mass / 1000.0;
-        Vector2 flickerVec = new Vector2((Math.Sin(_flickerPhase * 3.0) * 0.2 - 0.1) * heatForce * 0.1, -heatForce - body.Mass * world.Gravity.Length);
+        Vector2 gravityDir = world.Gravity.Normalized;
+        double heatForce = _currentTemperature * _activeProfile.HeatVelocityScale * body.Mass / 5000.0;
+        Vector2 flickerVec = new Vector2((Math.Sin(_flickerPhase * 3.0) * 0.2 - 0.1) * heatForce * 0.1, heatForce * 1.5) * -gravityDir;
         body.ApplyForce(flickerVec);
         double dragForce = body.Velocity.Length * 0.1 * body.Mass;
         body.ApplyForce(-body.Velocity.Normalized * dragForce);
@@ -284,8 +285,9 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyConvection(RigidBody body, double dt)
     {
-        double convForce = _currentTemperature / 100.0 * _activeProfile.ConvectionStrength;
-        Vector2 convVec = new Vector2((Math.Sin(_updateStopwatch.Elapsed.TotalSeconds * 3.0 + body.Id) * 0.3 + 0.1) * convForce, -convForce * 1.5);
+        Vector2 gravityDir = world.Gravity.Normalized;
+        double convForce = _currentTemperature / 100.0 * _activeProfile.ConvectionStrength * 0.3;
+        Vector2 convVec = new Vector2((Math.Sin(_updateStopwatch.Elapsed.TotalSeconds * 3.0 + body.Id) * 0.3 + 0.1) * convForce * 0.2, convForce * 1.5) * -gravityDir;
         body.ApplyForce(convVec);
         _convectionWorkDone += convVec.Length * body.Velocity.Length * dt;
     }
