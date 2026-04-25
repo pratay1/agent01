@@ -14,7 +14,7 @@ public partial class App : Application
     {
         // Initialize the mega logger early
         DebugLog.Init();
-        Logger.SetMinimumLevel(Logger.LogLevel.Debug);
+        Logger.MinimumLevel = Logger.LogLevel.Debug;
         // Capture unhandled UI thread exceptions
         this.DispatcherUnhandledException += (s, e) =>
         {

@@ -230,12 +230,12 @@
                         </Border>
                         <Border Width="1" Background="#2D2D2D" VerticalAlignment="Center" Margin="0,0,16,0"/>
                         <TextBlock x:Name="StatusText" Text="0 bodies" Style="{StaticResource StatusText}"/>
-                        <Border Width="16"/>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,8,0">
-                                <TextBlock x:Name="DescriptionText" Text="Standard physics body" Style="{StaticResource HelpText}" Foreground="#888888" MaxWidth="200" TextWrapping="Wrap"/>
-                            </Border>
-                        </StackPanel>
+<Border Width="16"/>
+                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                             <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,8,0">
+                                 <TextBlock x:Name="DescriptionText" Text="Standard physics body" Style="{StaticResource HelpText}" Foreground="#888888" MaxWidth="400" TextWrapping="Wrap"/>
+                             </Border>
+                         </StackPanel>
                         <Border Width="16"/>
                         <StackPanel Orientation="Horizontal">
                             <Button x:Name="ClearButton" Content="CLEAR" Click="ClearButton_Click" Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
