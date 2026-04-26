@@ -2,6 +2,7 @@ using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
 using PhysicsSandbox.Behaviors;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PhysicsSandbox.Physics;
 
@@ -291,11 +292,17 @@ public class PhysicsWorld
     {
         const int iterations = 8;
 
+        var manifolds = Collision.DetectAll(_bodies);
+        if (manifolds.Count == 0) return;
+
+        foreach (var manifold in manifolds)
+        {
+            manifold.BodyA.Behavior?.OnCollision(manifold.BodyA, manifold.BodyB, this);
+            manifold.BodyB.Behavior?.OnCollision(manifold.BodyB, manifold.BodyA, this);
+        }
+
         for (int i = 0; i < iterations; i++)
         {
-            var manifolds = Collision.DetectAll(_bodies);
-            if (manifolds.Count == 0) break;
-
             Collision.ResolveAll(manifolds);
         }
     }
@@ -333,7 +340,7 @@ public class PhysicsWorld
     }
 
     /// <summary>Attempts to retrieve a body by its unique identifier.</summary>
-    public bool TryGetBodyById(int id, out RigidBody? body)
+    public bool TryGetBodyById(int id, [NotNullWhen(true)] out RigidBody? body)
     {
         return _bodyMap.TryGetValue(id, out body);
     }

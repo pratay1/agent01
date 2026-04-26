@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Windows.Threading;
 
@@ -28,7 +29,7 @@ public class GameLoop
         
         _timer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS timing
+            Interval = TimeSpan.FromSeconds(1.0 / targetFps)
         };
         _timer.Tick += (s, e) => Tick();
     }
@@ -55,18 +56,24 @@ public class GameLoop
         double frameTime = (currentTime - _lastTime) / Stopwatch.Frequency;
         _lastTime = currentTime;
         _lastFrameTimeMs = frameTime * 1000.0;
-
-        // Cap max frame time to prevent spiral of death
-        if (frameTime > 0.1) frameTime = 0.1;
         
         _accumulator += frameTime;
 
         // Fixed timestep updates
-        while (_accumulator >= _fixedDeltaTime)
+        int maxSteps = (int)Math.Ceiling(0.1 / _fixedDeltaTime);
+        int steps = 0;
+        while (_accumulator >= _fixedDeltaTime && steps < maxSteps)
         {
             _update(_fixedDeltaTime);
             _accumulator -= _fixedDeltaTime;
+            steps++;
         }
+        // Cap accumulator to prevent runaway growth if we hit maxSteps
+        if (steps == maxSteps && _accumulator > _fixedDeltaTime)
+        {
+            _accumulator = Math.Min(_accumulator, maxSteps * _fixedDeltaTime);
+        }
+        // Don't call _render here - that happens after this loop at line 72
 
         // Render
         _render(frameTime);

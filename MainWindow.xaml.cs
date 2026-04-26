@@ -51,6 +51,8 @@ private double _lastTptMs = 0.0; // time per tick in ms
         { BodyType.Molly, ("Molly", "#FF4081") }
     };
 
+    private bool _updatingWindCheckbox = false;
+
     public MainWindow()
     {
         DebugLog.Init();
@@ -102,6 +104,7 @@ private double _lastTptMs = 0.0; // time per tick in ms
     private void UpdateCanvasSize()
     {
         if (GameCanvas == null) return;
+        if (_world == null) return;
         _canvasWidth = GameCanvas.ActualWidth;
         _canvasHeight = GameCanvas.ActualHeight;
         
@@ -196,12 +199,10 @@ private double _lastTptMs = 0.0; // time per tick in ms
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            _settingsVisible = !_settingsVisible;
-            // Toggle visibility of panels
-            BodyBarPanel.Visibility = _settingsVisible ? Visibility.Collapsed : Visibility.Visible;
-            SettingsBarPanel.Visibility = _settingsVisible ? Visibility.Visible : Visibility.Collapsed;
-        }
+    {
+        _settingsVisible = !_settingsVisible;
+        SettingsBarPanel.Visibility = _settingsVisible ? Visibility.Visible : Visibility.Collapsed;
+    }
 
         // Existing Body type button click handler
         private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
@@ -378,24 +379,43 @@ private double _lastTptMs = 0.0; // time per tick in ms
         _renderer.Clear();
     }
     private void ToggleGravity() => _world.ToggleGravityDirection();
+    private void SetWindActive(bool active)
+    {
+        // Prevent recursive updates when setting checkbox state
+        if (_updatingWindCheckbox) return;
+        
+        if (_world != null)
+        {
+            _world.ForceManager.Wind.IsActive = active;
+            if (active)
+            {
+                _world.ForceManager.Wind.Direction = new Vector2(1, 0);
+                _world.ForceManager.Wind.Strength = 200;
+            }
+            
+            // Update UI without triggering events
+            _updatingWindCheckbox = true;
+            WindCheckBox.IsChecked = active;
+            _updatingWindCheckbox = false;
+        }
+    }
+
     private void ToggleWind() 
     { 
-        _world.ForceManager.Wind.IsActive = !_world.ForceManager.Wind.IsActive; 
-        if (_world.ForceManager.Wind.IsActive) 
-        { 
-            _world.ForceManager.Wind.Direction = new Vector2(1, 0); 
-            _world.ForceManager.Wind.Strength = 200; 
-        } 
+        if (_world != null)
+            SetWindActive(!_world.ForceManager.Wind.IsActive); 
     }
 
     // Settings handlers
     private void WindCheckBox_Checked(object sender, RoutedEventArgs e)
     {
-        if (_world != null) _world.ForceManager.Wind.IsActive = true;
+        if (_world != null && !_updatingWindCheckbox)
+            SetWindActive(true);
     }
     private void WindCheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
-        if (_world != null) _world.ForceManager.Wind.IsActive = false;
+        if (_world != null && !_updatingWindCheckbox)
+            SetWindActive(false);
     }
     private void ShiftSpawnRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _shiftSpawnRate = e.NewValue;
     private void MaxShiftSpawnsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _maxShiftSpawnsPerFrame = (int)Math.Round(e.NewValue);
