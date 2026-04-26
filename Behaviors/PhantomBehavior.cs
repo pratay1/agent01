@@ -61,6 +61,7 @@ public class PhantomBehavior : BodyBehavior
     private bool _enableTeleport = true;
     private bool _enableAchievements = true;
     private readonly Dictionary<string, double> _achievements = new();
+    private Random _rng;
 
     public override BodyType Type => BodyType.Phantom;
     public override string Name => "Phantom";
@@ -81,6 +82,7 @@ public class PhantomBehavior : BodyBehavior
     public override void OnCreate(RigidBody body)
     {
         base.OnCreate(body);
+        _rng = new Random(body.Id);
         body.Restitution = DefaultRestitution;
         body.Mass = DefaultMass;
         body.Radius = DefaultRadius;
@@ -172,7 +174,7 @@ public class PhantomBehavior : BodyBehavior
     private void ApplyShake(RigidBody body, RigidBody other)
     {
         if (_energy < _profile.ShakeCost) return;
-        double angle = Random.Shared.NextDouble() * Math.PI * 2;
+        double angle = _rng.NextDouble() * Math.PI * 2;
         double shakePhase = _lifeTime * _profile.ShakeFreq * 2 * Math.PI;
         double factor = Math.Abs(Math.Sin(shakePhase));
         double strength = Math.Clamp(_profile.ShakeStrength * factor, 1000.0, 20000.0);

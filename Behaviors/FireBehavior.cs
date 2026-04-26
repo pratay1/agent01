@@ -71,6 +71,7 @@ public class FireBehavior : BodyBehavior
     private Vector2 _lastPosition = Vector2.Zero;
     private readonly List<Vector2> _trail = new();
     private double _flicker = 0.0;
+    private Random _rng = new Random();
 
     public override BodyType Type => BodyType.Fire;
     public override string Name => _profile.Name + " Fire";
@@ -92,6 +93,12 @@ public class FireBehavior : BodyBehavior
     public override void OnCreate(RigidBody body)
     {
         base.OnCreate(body);
+        _rng = new Random(body.Id);
+        body.Restitution = DefaultRestitution;
+        body.Mass = DefaultMass;
+        body.Radius = DefaultRadius;
+        body.CollisionLayer = CollisionLayer.Particle;
+        body.CollisionMask = (int)CollisionLayer.Default;
         _currentRadius = DefaultRadius;
         _maxSize = DefaultRadius;
         _minSize = DefaultRadius;
@@ -131,6 +138,7 @@ public class FireBehavior : BodyBehavior
 
     private void UpdateTemperature(double dt)
     {
+        if (_profile == null) return;
         double target = _profile.BaseHeat * (_fuel / Math.Max(1.0, _profile.FuelCapacity)) * _intensityMult;
         target = Math.Clamp(target, 200.0, _profile.MaxTemp);
         if (_isDying) target = Math.Max(200.0, target * 0.92);
@@ -144,6 +152,7 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyFirePhysics(RigidBody body, double dt, PhysicsWorld world)
     {
+        if (_profile == null || world == null) return;
         Vector2 antiGravity = -world.Gravity.Normalized;
         double heatForce = _temperature * _profile.HeatVelocityScale * body.Mass / 5000.0;
         double flickerX = (_flicker * 0.2 - 0.1) * heatForce * 0.1;
@@ -157,7 +166,7 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyConvection(RigidBody body, double dt, PhysicsWorld world)
     {
-        if (world == null) return;
+        if (world == null || _profile == null) return;
         Vector2 antiGravity = -world.Gravity.Normalized;
         double convForce = _temperature / 100.0 * _profile.Convection * 0.3;
         double convX = Math.Sin(_flickerPhase * 3.0 + body.Id) * 0.3 * convForce * 0.2;
@@ -168,6 +177,7 @@ public class FireBehavior : BodyBehavior
 
     private void ApplyRadiation(RigidBody body, PhysicsWorld world)
     {
+        if (_profile == null || world == null) return;
         double range = _currentRadius * 3.0;
         double strength = _temperature / 100.0 * _profile.Radiation;
         foreach (var other in world.Bodies)
@@ -182,6 +192,7 @@ public class FireBehavior : BodyBehavior
 
     private void UpdateSize(RigidBody body, double dt)
     {
+        if (_profile == null) return;
         double size = DefaultRadius * _sizeVariation * Math.Clamp(_fuel / Math.Max(1.0, _profile.FuelCapacity) * 2.0, 0.3, 2.0);
         _currentRadius = size;
         _intensityMult = 0.98 * _intensityMult + 0.02 * (1.0 + _temperature / Math.Max(1.0, _peakTemp) * 0.5);
@@ -192,8 +203,8 @@ public class FireBehavior : BodyBehavior
 
     private void SpreadFire(RigidBody body, double dt, PhysicsWorld world)
     {
-        if (!_profile.CanSpread || _fuel < 10) return;
-        if (Random.Shared.NextDouble() > _profile.SpreadProb) return;
+        if (_rng == null || _profile == null || !_profile.CanSpread || _fuel < 10 || world == null) return;
+        if (_rng.NextDouble() > _profile.SpreadProb) return;
 
         foreach (var other in world.Bodies)
         {
@@ -209,6 +220,7 @@ public class FireBehavior : BodyBehavior
 
     private void IgniteNearby(RigidBody body, PhysicsWorld world)
     {
+        if (_profile == null || world == null || _rng == null) return;
         foreach (var other in world.Bodies)
         {
             if (other == body || other.BodyType == BodyType.Fire || other.IsStatic || _temperature < IGNITION_TEMP * 1.5) continue;
@@ -237,6 +249,7 @@ public class FireBehavior : BodyBehavior
 
     private void ClampProperties(RigidBody body)
     {
+        if (_profile == null) return;
         double mult = _profile.MaxRadiusMult > 0 ? _profile.MaxRadiusMult : MAX_RADIUS_MULT;
         double maxR = Math.Max(MIN_RADIUS, _currentRadius * mult);
         body.Radius = Math.Clamp(_currentRadius, MIN_RADIUS, maxR);

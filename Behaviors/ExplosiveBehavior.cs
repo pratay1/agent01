@@ -59,6 +59,7 @@ public class ExplosiveBehavior : BodyBehavior
     private bool _enableDebris = true;
     private bool _enableChain = true;
     private readonly List<Vector2> _debrisPositions = new();
+    private Random _rng;
 
     public override BodyType Type => BodyType.Explosive;
     public override string Name => "Explosive";
@@ -79,6 +80,7 @@ public class ExplosiveBehavior : BodyBehavior
     public override void OnCreate(RigidBody body)
     {
         base.OnCreate(body);
+        _rng = new Random(body.Id);
         body.Restitution = DefaultRestitution;
         body.Mass = DefaultMass;
         body.Radius = DefaultRadius;
@@ -172,11 +174,13 @@ public class ExplosiveBehavior : BodyBehavior
         for (int i = 0; i < count; i++)
         {
             if (_debrisSpawned >= MAX_SPAWN_DEBRIS) break;
-            double angle = Random.Shared.NextDouble() * Math.PI * 2;
-            double speed = MIN_DEBRIS_SPEED + Random.Shared.NextDouble() * (MAX_DEBRIS_SPEED - MIN_DEBRIS_SPEED);
+            double angle = _rng.NextDouble() * Math.PI * 2;
+            double speed = MIN_DEBRIS_SPEED + _rng.NextDouble() * (MAX_DEBRIS_SPEED - MIN_DEBRIS_SPEED);
             var vel = new Vector2(Math.Cos(angle) * speed, Math.Sin(angle) * speed);
             var debris = world.CreateBody(source.Position, radius, mass, 0.5, _profile.DebrisType);
             debris.Velocity = vel;
+            debris.CollisionLayer = CollisionLayer.Particle;
+            debris.CollisionMask = (int)CollisionLayer.Default;
             _debrisSpawned++;
             _debrisPositions.Add(debris.Position);
         }
@@ -186,14 +190,23 @@ public class ExplosiveBehavior : BodyBehavior
     {
         if (!_profile.ChainReaction || !_enableChain) return;
         int chainCount = 0;
+        var toDetonate = new List<RigidBody>();
         foreach (var other in SpatialQuery(body.Position, CHAIN_RADIUS, world))
         {
             if (chainCount >= MAX_CHAIN) break;
             if (other == body || other.IsStatic) continue;
             if (other.Behavior is ExplosiveBehavior exp && !exp._hasDetonated)
             {
-                exp.Detonate(other, world);
+                toDetonate.Add(other);
                 chainCount++;
+            }
+        }
+        
+        foreach (var other in toDetonate)
+        {
+            if (other.Behavior is ExplosiveBehavior exp)
+            {
+                exp.Detonate(other, world);
             }
         }
     }
@@ -217,11 +230,13 @@ public class ExplosiveBehavior : BodyBehavior
         for (int i = 0; i < FIRE_BODY_COUNT; i++)
         {
             if (_debrisSpawned >= MAX_SPAWN_DEBRIS) break;
-            double angle = Random.Shared.NextDouble() * Math.PI * 2;
-            double speed = FIRE_DEBRIS_SPEED * (0.5 + Random.Shared.NextDouble() * 0.5);
+            double angle = _rng.NextDouble() * Math.PI * 2;
+            double speed = FIRE_DEBRIS_SPEED * (0.5 + _rng.NextDouble() * 0.5);
             var velocity = new Vector2(Math.Cos(angle) * speed, Math.Sin(angle) * speed);
             var fireDebris = world.CreateBody(source.Position, FIRE_DEBRIS_RADIUS, FIRE_DEBRIS_MASS, 0.3, BodyType.Fire);
             fireDebris.Velocity = velocity;
+            fireDebris.CollisionLayer = CollisionLayer.Particle;
+            fireDebris.CollisionMask = (int)CollisionLayer.Default;
             _debrisSpawned++;
         }
     }

@@ -131,7 +131,8 @@ public class Renderer
 
     private void UpdateParticles(double dt)
     {
-        for (int i = 0; i < _particles.Count; i++)
+        // Use swap-remove to avoid O(n^2) shifts from RemoveAt
+        for (int i = _particles.Count - 1; i >= 0; i--)
         {
             var p = _particles[i];
             p.X += p.VX * dt;
@@ -140,8 +141,9 @@ public class Renderer
 
             if (p.Life <= 0)
             {
-                _particles.RemoveAt(i);
-                i--;
+                // Swap with last element and remove last (O(1) operation)
+                _particles[i] = _particles[_particles.Count - 1];
+                _particles.RemoveAt(_particles.Count - 1);
             }
         }
     }

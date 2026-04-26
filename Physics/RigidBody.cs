@@ -3,8 +3,18 @@ using PhysicsSandbox.Behaviors;
 
 namespace PhysicsSandbox.Physics;
 
+[Flags]
+public enum CollisionLayer
+{
+    None    = 0,
+    Default = 1 << 0,  // 1 - regular bodies
+    Particle   = 1 << 1,  // 2 - temporary particles/debris
+    Ghost  = 1 << 2,   // 4 - phantom-like bodies that skip detailed collision
+}
+
 public enum BodyType
 {
+    None = 0,
     Normal,
     Bouncy,
     Heavy,
@@ -48,6 +58,8 @@ public class RigidBody
         set => _acceleration = value;
     }
     public double Radius { get; set; }
+    public CollisionLayer CollisionLayer { get; set; }
+    public int CollisionMask { get; set; }
     private double _mass;
     public double Mass
     {
@@ -118,6 +130,8 @@ public class RigidBody
         Mass = mass;
         Restitution = System.Math.Clamp(restitution, 0, 1);
         BodyType = bodyType;
+        CollisionLayer = CollisionLayer.Default;
+        CollisionMask = (int)CollisionLayer.Default | (int)CollisionLayer.Particle;
         HasExploded = false;
         IsFrozen = false;
         IsStuck = false;

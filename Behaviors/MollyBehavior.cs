@@ -130,7 +130,7 @@ public class MollyBehavior : BodyBehavior
         for (int i = 0; i < 10; i++)
         {
             float angle = i * (float)System.Math.PI * 2 / 10;
-            float speed = 250f + (float)(Random.Shared.NextDouble() * 150);
+            float speed = 250f + (float)(new System.Random(body.Id * 100 + i).NextDouble() * 150);
             var vel = new Vector2(
                 (float)System.Math.Cos(angle) * speed,
                 (float)System.Math.Sin(angle) * speed);
@@ -138,6 +138,8 @@ public class MollyBehavior : BodyBehavior
             var debris = world.CreateBody(body.Position, body.Radius * 0.2, body.Mass * 0.1, 0.5);
             debris.Velocity = vel;
             debris.BodyType = BodyType.Fire;
+            debris.CollisionLayer = CollisionLayer.Particle;
+            debris.CollisionMask = (int)CollisionLayer.Default;
         }
 
         var bodies = world.Bodies;

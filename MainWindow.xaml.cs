@@ -201,6 +201,7 @@ private double _lastTptMs = 0.0; // time per tick in ms
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         _settingsVisible = !_settingsVisible;
+        BodyBarPanel.Visibility = _settingsVisible ? Visibility.Collapsed : Visibility.Visible;
         SettingsBarPanel.Visibility = _settingsVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 

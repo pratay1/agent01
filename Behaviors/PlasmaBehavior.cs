@@ -570,7 +570,7 @@ public class PlasmaBehavior : BodyBehavior
 
 internal static class StaticRandom
 {
-    private static Random rng = new Random();
+    private static Random rng = new Random(0);
     public static double NextDouble() => rng.NextDouble();
     public static double NextDouble(double min, double max) => min + (max - min) * rng.NextDouble();
     public static int Next(int min, int max) => rng.Next(min, max);

@@ -28,6 +28,14 @@ public static class Collision
         if (a.BodyType == BodyType.Phantom || b.BodyType == BodyType.Phantom)
             return null;
 
+        // Collision layer filtering: skip if layers don't interact
+        // Check if a can collide with b's layer
+        if ((a.CollisionMask & (1 << (int)b.CollisionLayer)) == 0)
+            return null;
+        // Check if b can collide with a's layer
+        if ((b.CollisionMask & (1 << (int)a.CollisionLayer)) == 0)
+            return null;
+
         Vector2 diff = b.Position - a.Position;
         double distanceSq = diff.LengthSquared;
         double radiusSum = a.Radius + b.Radius;
@@ -39,7 +47,7 @@ public static class Collision
         if (distance < 0.0001)
         {
             // Use deterministic direction for perfectly overlapping bodies
-            double angle = Random.Shared.NextDouble() * System.Math.PI * 2;
+            double angle = DeterministicAngle(a, b);
             return new Manifold(a, b, new Vector2(System.Math.Cos(angle), System.Math.Sin(angle)), radiusSum);
         }
 
@@ -49,17 +57,51 @@ public static class Collision
         return new Manifold(a, b, normal, depth);
     }
 
+    private static double DeterministicAngle(RigidBody a, RigidBody b)
+    {
+        int min = Math.Min(a.Id, b.Id);
+        int max = Math.Max(a.Id, b.Id);
+        int seed = (min << 16) ^ max;
+        var rng = new System.Random(seed);
+        return rng.NextDouble() * Math.PI * 2;
+    }
+
     public static List<Manifold> DetectAll(List<RigidBody> bodies)
     {
         List<Manifold> manifolds = new();
 
         int count = bodies.Count;
+        if (count == 0) return manifolds;
+
+        // Compute cell size as ~2x the largest body radius
+        double maxRadius = 0;
+        foreach (var body in bodies)
+        {
+            if (body.Radius > maxRadius)
+                maxRadius = body.Radius;
+        }
+        double cellSize = System.Math.Max(maxRadius * 2, 100.0);
+
+        // Build spatial hash
+        var spatialHash = new SpatialHash(cellSize);
+        foreach (var body in bodies)
+        {
+            spatialHash.Insert(body);
+        }
+
+        // For each body, query potential neighbors from spatial hash
+        // Only test pairs where bodyB.Id > bodyA.Id to avoid duplicate pairs
         for (int i = 0; i < count; i++)
         {
             var a = bodies[i];
-            for (int j = i + 1; j < count; j++)
+            var candidates = spatialHash.Query(a.Position, a.Radius);
+
+            foreach (var b in candidates)
             {
-                var b = bodies[j];
+                // Avoid duplicate pairs: only check when bodyB.Id > bodyA.Id
+                if (b.Id <= a.Id)
+                    continue;
+
                 var manifold = DetectCircleCircle(a, b);
                 if (manifold != null)
                 {

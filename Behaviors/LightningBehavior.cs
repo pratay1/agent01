@@ -138,7 +138,7 @@ public class LightningBehavior : BodyBehavior
         if (targets.Count == 0) { _state = ZapState.Recharging; return; }
 
         var target = SelectTarget(body, targets);
-        float force = _profile.ChainStrength * (float)Random.Shared.NextDouble();
+        float force = _profile.ChainStrength * (float)new System.Random(body.Id * 31 + target.Id).NextDouble();
         _pendingZaps.Enqueue(new PendingZap { Target = target, Force = force, Direction = (target.Position - body.Position).Normalized });
 
         if (force > _peakPower) _peakPower = force;

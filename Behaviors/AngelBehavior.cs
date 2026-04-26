@@ -39,6 +39,7 @@ public class AngelBehavior : BodyBehavior
     private bool _haloActive = false;
     private bool _auraActive = false;
     private double _ascensionTimer = 0;
+    private Random _rng;
     private enum CelestialEffect { Halo, Aura, Trail, Blessing, Ascension }
     private readonly List<CelestialEffect> _celestialEffects = new();
     public enum WingType { Feather, Light, Ethereal, Golden, Silver, Crystal, Starlight }
@@ -58,6 +59,7 @@ public class AngelBehavior : BodyBehavior
     public override void OnCreate(RigidBody body)
     {
         base.OnCreate(body);
+        _rng = new Random(body.Id);
         body.FlyTimer = 0;
         _wingSpan = DefaultRadius;
         _divineEnergy = 100;
@@ -93,8 +95,8 @@ public class AngelBehavior : BodyBehavior
         _totalFlightTime = 0;
         _wingSpan = MAX_WING_SPAN;
         _haloIntensity = 1.0;
-        double angle = System.Random.Shared.NextDouble() * System.Math.PI * 2;
-        double forceVariation = 0.8 + System.Random.Shared.NextDouble() * 0.4;
+        double angle = _rng.NextDouble() * System.Math.PI * 2;
+        double forceVariation = 0.8 + _rng.NextDouble() * 0.4;
         var dir = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle));
         body.ApplyImpulse(dir * FLIGHT_FORCE * forceVariation);
         LogDebug(body, "Starting celestial flight");
