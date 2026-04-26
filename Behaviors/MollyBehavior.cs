@@ -43,7 +43,7 @@ public class MollyBehavior : BodyBehavior
             // Check if already latched
             if (body.LatchedPartnerId.HasValue)
             {
-                if (!world.TryGetBodyById(body.LatchedPartnerId.Value, out RigidBody? partner) || partner.BodyType != BodyType.Angel)
+                if (!world.TryGetBodyById(body.LatchedPartnerId.Value, out RigidBody? partner) || partner!.BodyType != BodyType.Angel)
                 {
                     body.LatchedPartnerId = null;
                 }
@@ -96,7 +96,7 @@ public class MollyBehavior : BodyBehavior
             {
                 if (world.TryGetBodyById(body.LatchedPartnerId.Value, out RigidBody? partner))
                 {
-                    partner.LatchedPartnerId = null;
+                    partner!.LatchedPartnerId = null;
                 }
                 body.LatchedPartnerId = null;
             }
@@ -120,7 +120,7 @@ public class MollyBehavior : BodyBehavior
     {
         if (body.LatchedPartnerId.HasValue && world.TryGetBodyById(body.LatchedPartnerId.Value, out RigidBody? partner))
         {
-            partner.LatchedPartnerId = null;
+            partner!.LatchedPartnerId = null;
             body.LatchedPartnerId = null;
         }
 

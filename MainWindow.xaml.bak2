@@ -218,6 +218,7 @@
                                Foreground="#8B5CF6" 
                                FontFamily="Segoe UI, Consolas"
                                HorizontalAlignment="Center"
+                               LetterSpacing="8"
                                Margin="0,0,0,30">
                         <TextBlock.Effect>
                             <DropShadowEffect Color="#8B5CF6" Direction="315" ShadowDepth="2" BlurRadius="10" Opacity="0.5"/>
@@ -231,7 +232,8 @@
                            Foreground="#6B7280" 
                            FontFamily="Segoe UI, Consolas"
                            HorizontalAlignment="Center"
-                           Margin="0,0,0,50"/>
+                           Margin="0,0,0,50"
+                           LetterSpacing="2"/>
                 
                 <!-- Menu Buttons Container -->
                 <StackPanel Grid.Row="4" HorizontalAlignment="Center" Width="320">
@@ -318,8 +320,7 @@
                                             </Border>
                                         </ControlTemplate>
                                     </Setter.Value>
-                                </Setter>
-                            </Style>
+                                </Style>
                             </Button.Resources>
                     </Button>
                 </StackPanel>
@@ -343,7 +344,7 @@
                 <Border Grid.RowSpan="7" Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,30,0,0" IsHitTestVisible="False">
                     <Border.Background>
                         <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                            <GradientStop Color="#3B82F6" Offset="0"/>
+                            <GradientStop Color="#3B82F6" Offset="0" Opacity="0.3"/>
                             <GradientStop Color="Transparent" Offset="1"/>
                         </RadialGradientBrush>
                     </Border.Background>

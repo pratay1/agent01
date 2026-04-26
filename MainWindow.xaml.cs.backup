@@ -24,8 +24,8 @@ public partial class MainWindow : Window
     
     // Shift-click spawning
     private bool _isShiftSpawning = false; // shift-click rapid spawning
-    private bool _settingsVisible = false; // toggle for settings panel
-    private double _lastTptMs = 0.0; // time per tick in ms
+private bool _settingsVisible = false; // toggle for settings panel
+private double _lastTptMs = 0.0; // time per tick in ms
     private double _shiftSpawnAccumulator = 0.0;
     private Point _shiftSpawnPosition;
     private double _shiftSpawnRate = 14.0; // objects per second (mutable via settings)
@@ -205,8 +205,8 @@ public partial class MainWindow : Window
         SettingsBarPanel.Visibility = _settingsVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // Existing Body type button click handler
-    private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
+        // Existing Body type button click handler
+        private void BodyTypeButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is System.Windows.Controls.Button btn && btn.Tag is string tag)
         {
@@ -305,8 +305,8 @@ public partial class MainWindow : Window
     private void SpawnRandomBody()
     {
         var behavior = Behaviors.BodyBehaviorFactory.Get(BodyType.Normal);
-        double x = 340 + Random.Shared.NextDouble() * (_canvasWidth - 400);
-        double y = 100 + Random.Shared.NextDouble() * 150;
+        double x = 100 + Random.Shared.NextDouble() * (_canvasWidth - 200);
+        double y = 50 + Random.Shared.NextDouble() * 150;
         double radius = behavior.DefaultRadius + Random.Shared.NextDouble() * 5;
         double mass = behavior.DefaultMass + Random.Shared.NextDouble() * 3;
         double restitution = behavior.DefaultRestitution + (Random.Shared.NextDouble() - 0.5) * 0.2;
@@ -316,9 +316,8 @@ public partial class MainWindow : Window
     private void SpawnBody(Point position)
     {
         var behavior = Behaviors.BodyBehaviorFactory.Get(_selectedBodyType);
-        double spawnX = System.Math.Max(position.X, 240 + behavior.DefaultRadius + 5);
         var body = _world.CreateBody(
-            new Vector2(spawnX, position.Y),
+            new Vector2(position.X, position.Y),
             behavior.DefaultRadius,
             behavior.DefaultMass,
             behavior.DefaultRestitution,
@@ -334,7 +333,7 @@ public partial class MainWindow : Window
             if (_isShiftSpawning)
             {
                 _shiftSpawnAccumulator += dt;
-                double spawnInterval = 1.0 / _shiftSpawnRate;
+                double spawnInterval = 1.0 / _shiftSpawnRate; // ~0.333 seconds
                 int spawnsThisFrame = 0;
                 while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < _maxShiftSpawnsPerFrame)
                 {
@@ -348,23 +347,23 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnRender(double dt)
-    {
-        _lastTptMs = _gameLoop.LastTickMs;
-        _renderer.Update(_world.Bodies, dt);
-        GameCanvas.InvalidateVisual();
-        UpdateStatus();
-    }
+     private void OnRender(double dt)
+     {
+         _lastTptMs = _gameLoop.LastTickMs;
+         _renderer.Update(_world.Bodies, dt);
+         GameCanvas.InvalidateVisual();
+         UpdateStatus();
+     }
 
-    private void UpdateStatus()
-    {
-        string status = $"{_world.Bodies.Count} bodies";
-        if (_isPaused) status += " | PAUSED";
-        status += $" | Speed: {_world.TimeScale:F1}x | TPT: {_lastTptMs:F2} ms";
-        StatusText.Text = status;
+     private void UpdateStatus()
+     {
+         string status = $"{_world.Bodies.Count} bodies";
+         if (_isPaused) status += " | PAUSED";
+         status += $" | Speed: {_world.TimeScale:F1}x | TPT: {_lastTptMs:F2} ms";
+         StatusText.Text = status;
 
-        TptDisplayText.Text = $"{_lastTptMs:F2} ms";
-    }
+         TptDisplayText.Text = $"{_lastTptMs:F2} ms";
+     }
 
     private void TogglePause()
     {
@@ -383,6 +382,7 @@ public partial class MainWindow : Window
     private void ToggleGravity() => _world.ToggleGravityDirection();
     private void SetWindActive(bool active)
     {
+        // Prevent recursive updates when setting checkbox state
         if (_updatingWindCheckbox) return;
         
         if (_world != null)
@@ -394,6 +394,7 @@ public partial class MainWindow : Window
                 _world.ForceManager.Wind.Strength = 200;
             }
             
+            // Update UI without triggering events
             _updatingWindCheckbox = true;
             WindCheckBox.IsChecked = active;
             _updatingWindCheckbox = false;

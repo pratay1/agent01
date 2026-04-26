@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using PhysicsSandbox.Mathematics;
 using PhysicsSandbox.Physics;
 using PhysicsSandbox.Behaviors;
@@ -16,7 +17,7 @@ public class PhysicsWorld
     private bool _isPaused;
 
     public double GroundY { get; set; } = 600;
-    public double LeftBoundary { get; set; } = 0;
+    public double LeftBoundary { get; set; } = 240;  // Sidebar is 240px wide
     public double RightBoundary { get; set; } = 1280;
     public double TopBoundary { get; set; } = 0;
     public double TimeScale { get; set; } = 1.0;
@@ -33,6 +34,7 @@ public class PhysicsWorld
         {
             Behavior = behavior
         };
+        body.World = this;
         behavior.OnCreate(body);
         _bodies.Add(body);
         _bodyMap[body.Id] = body;
@@ -70,9 +72,10 @@ public class PhysicsWorld
     {
         RightBoundary = width;
         GroundY = height;
+        LeftBoundary = 240;  // Sidebar is 240px wide
     }
 
-    public bool TryGetBodyById(int id, out RigidBody? body) => _bodyMap.TryGetValue(id, out body);
+     public bool TryGetBodyById(int id, out RigidBody? body) => _bodyMap.TryGetValue(id, out body);
 
     public void Step(double dt)
     {
@@ -134,8 +137,9 @@ public class PhysicsWorld
         double minX = LeftBoundary;
         double maxX = RightBoundary;
         double maxY = GroundY;
+        double minY = TopBoundary;
 
-            for (int i = 0; i < _bodies.Count; i++)
+        for (int i = 0; i < _bodies.Count; i++)
         {
             var b = _bodies[i];
             if (b.IsStatic) continue;
@@ -146,12 +150,14 @@ public class PhysicsWorld
             double vx = b.Velocity.X;
             double vy = b.Velocity.Y;
 
+            // Left boundary - sidebar barrier
             if (x - r < minX)
             {
                 b.Position = new Vector2(minX + r, y);
                 if (vx < 0)
                     b.Velocity = new Vector2(-vx * b.Restitution, vy);
             }
+            // Right boundary
             else if (x + r > maxX)
             {
                 b.Position = new Vector2(maxX - r, y);
@@ -159,13 +165,15 @@ public class PhysicsWorld
                     b.Velocity = new Vector2(-vx * b.Restitution, vy);
             }
 
-            if (y - r < TopBoundary)
+            // Top boundary
+            if (y - r < minY)
             {
-                b.Position = new Vector2(x, TopBoundary + r);
+                b.Position = new Vector2(x, minY + r);
                 if (vy < 0)
                     b.Velocity = new Vector2(vx, -vy * b.Restitution);
             }
 
+            // Bottom boundary (ground)
             if (y + r > maxY)
             {
                 b.Position = new Vector2(x, maxY - r);
