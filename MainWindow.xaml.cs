@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     // Shift-click spawning
     private bool _isShiftSpawning = false; // shift-click rapid spawning
 private bool _settingsVisible = false; // toggle for settings panel
+private double _lastTptMs = 0.0; // time per tick in ms
     private double _shiftSpawnAccumulator = 0.0;
     private Point _shiftSpawnPosition;
     private double _shiftSpawnRate = 14.0; // objects per second (mutable via settings)
@@ -194,7 +195,7 @@ private bool _settingsVisible = false; // toggle for settings panel
         }
     }
 
-    private void SettingsToggleButton_Click(object sender, RoutedEventArgs e)
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             _settingsVisible = !_settingsVisible;
             // Toggle visibility of panels
@@ -344,20 +345,23 @@ private bool _settingsVisible = false; // toggle for settings panel
         }
     }
 
-    private void OnRender(double dt)
-    {
-        _renderer.Update(_world.Bodies, dt);
-        GameCanvas.InvalidateVisual();
-        UpdateStatus();
-    }
+     private void OnRender(double dt)
+     {
+         _lastTptMs = _gameLoop.LastTickMs;
+         _renderer.Update(_world.Bodies, dt);
+         GameCanvas.InvalidateVisual();
+         UpdateStatus();
+     }
 
-    private void UpdateStatus()
-    {
-        string status = $"{_world.Bodies.Count} bodies";
-        if (_isPaused) status += " | PAUSED";
-        status += $" | Speed: {_world.TimeScale:F1}x";
-        StatusText.Text = status;
-    }
+     private void UpdateStatus()
+     {
+         string status = $"{_world.Bodies.Count} bodies";
+         if (_isPaused) status += " | PAUSED";
+         status += $" | Speed: {_world.TimeScale:F1}x | TPT: {_lastTptMs:F2} ms";
+         StatusText.Text = status;
+
+         TptDisplayText.Text = $"{_lastTptMs:F2} ms";
+     }
 
     private void TogglePause()
     {
@@ -385,10 +389,14 @@ private bool _settingsVisible = false; // toggle for settings panel
     }
 
     // Settings handlers
-    private void WindCheckBox_Checked(object sender, RoutedEventArgs e) => _world.ForceManager.Wind.IsActive = true;
-    private void WindCheckBox_Unchecked(object sender, RoutedEventArgs e) => _world.ForceManager.Wind.IsActive = false;
-    private void FPSCheckBox_Checked(object sender, RoutedEventArgs e) => FPSCounter.Visibility = Visibility.Visible;
-    private void FPSCheckBox_Unchecked(object sender, RoutedEventArgs e) => FPSCounter.Visibility = Visibility.Collapsed;
+    private void WindCheckBox_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_world != null) _world.ForceManager.Wind.IsActive = true;
+    }
+    private void WindCheckBox_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_world != null) _world.ForceManager.Wind.IsActive = false;
+    }
     private void ShiftSpawnRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _shiftSpawnRate = e.NewValue;
     private void MaxShiftSpawnsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => _maxShiftSpawnsPerFrame = (int)Math.Round(e.NewValue);
 

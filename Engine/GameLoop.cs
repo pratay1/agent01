@@ -13,9 +13,11 @@ public class GameLoop
     private double _accumulator;
     private double _lastTime;
     private bool _isRunning;
+    private double _lastFrameTimeMs;
 
     public double TargetFPS => 1.0 / _fixedDeltaTime;
     public bool IsRunning => _isRunning;
+    public double LastTickMs => _lastFrameTimeMs;
 
     public GameLoop(Action<double> update, Action<double> render, double targetFps = 60.0)
     {
@@ -52,6 +54,7 @@ public class GameLoop
         double currentTime = Stopwatch.GetTimestamp();
         double frameTime = (currentTime - _lastTime) / Stopwatch.Frequency;
         _lastTime = currentTime;
+        _lastFrameTimeMs = frameTime * 1000.0;
 
         // Cap max frame time to prevent spiral of death
         if (frameTime > 0.1) frameTime = 0.1;

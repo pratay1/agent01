@@ -222,6 +222,9 @@
                     <TextBlock Text="PHYSICS SANDBOX" Style="{StaticResource TitleText}"/>
                     <Border Width="40"/>
 <Grid x:Name="TopRightContainer" HorizontalAlignment="Right" VerticalAlignment="Center">
+    <Button x:Name="SettingsButton" Click="SettingsButton_Click" Width="36" Height="36" Style="{StaticResource ActionButton}" Margin="0,0,8,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Path Width="18" Height="18" Fill="#FFFFFF" Data="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 3.5 3.5zm0-5a1.5 1.5 0 1 1-1.5-1.5 1.5 1.5 0 0 1 1.5 1.5zm6.6-2.5l-1.1-2.4a1 1 0 0 0-1.2-.6l-2.9.6a8.02 8.02 0 0 0-1.5-1l.5-3a1 1 0 0 0-1-1.2l-2.4 1.1a8.02 8.02 0 0 0-2-.6l-.6-2.9a1 1 0 0 0-1.2-.6l-2.4 1.1a8.02 8.02 0 0 0-2 .6l-.6 2.9a1 1 0 0 0 1.2 1.2l2.4-1.1a8.02 8.02 0 0 0 2 .6l.6 2.9a1 1 0 0 0 1.2.6l2.4-1.1a8.5 8.5 0 0 0 1.5 1l-.5 3a1 1 0 0 0 1 1.2l2.4-1.1a8.02 8.02 0 0 0 2 .6l.6 2.9a1 1 0 0 0 1.2 1.2l2.4-1.1a8.02 8.02 0 0 0 2-.6l.6-2.9a1 1 0 0 0-.6-1.2l-2.4-1.1a8.02 8.02 0 0 0 1.5-1l.5-3A1 1 0 0 0 21.1 10.5l2.4 1.1A5 5 0 0 1 20.1 13zm-8.6 3.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+    </Button>
     <StackPanel x:Name="BodyBarPanel" Orientation="Horizontal" VerticalAlignment="Center">
         <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,16,0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -246,7 +249,6 @@
     <!-- Settings panel (hidden by default) -->
     <StackPanel x:Name="SettingsBarPanel" Orientation="Vertical" Visibility="Collapsed" VerticalAlignment="Center">
         <CheckBox x:Name="WindCheckBox" Content="Enable Wind" IsChecked="False" Checked="WindCheckBox_Checked" Unchecked="WindCheckBox_Unchecked"/>
-        <CheckBox x:Name="FPSCheckBox" Content="Show FPS Counter" IsChecked="True" Checked="FPSCheckBox_Checked" Unchecked="FPSCheckBox_Unchecked"/>
         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
             <TextBlock Text="Shift Spawn Rate:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
             <Slider x:Name="ShiftSpawnRateSlider" Minimum="1" Maximum="30" Value="14" Width="120" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ShiftSpawnRateSlider_ValueChanged" Margin="8,0,0,0"/>
@@ -255,12 +257,16 @@
             <TextBlock Text="Max Shift Spawns:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
             <Slider x:Name="MaxShiftSpawnsSlider" Minimum="1" Maximum="20" Value="10" Width="120" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="MaxShiftSpawnsSlider_ValueChanged" Margin="8,0,0,0"/>
         </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <TextBlock Text="TPT:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+            <TextBlock x:Name="TptDisplayText" Text="0.00 ms" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center" Margin="4,0,0,0"/>
+        </StackPanel>
         <!-- Placeholder settings -->
         <CheckBox Content="Enable Gravity" IsChecked="True" IsEnabled="False"/>
         <CheckBox Content="Show Body Names" IsChecked="True" IsEnabled="False"/>
     </StackPanel>
 </Grid>
-                <Button x:Name="SettingsToggleButton" Content="⚙" Width="32" Height="32" Click="SettingsToggleButton_Click" DockPanel.Dock="Right" Margin="8,0,0,0"/>
+                
 </DockPanel>
             </Border>
             
@@ -297,10 +303,7 @@
                 <TextBlock Style="{StaticResource HelpText}" Text="LMB: SPAWN | RMB: EXPLODE | SPACE: PAUSE | C: CLEAR | G: GRAVITY | W: WIND | +/- : SPEED"/>
             </Border>
             
-            <!-- FPS counter -->
-            <Border Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" Padding="8,4" Background="#000000" CornerRadius="4" Opacity="0.7">
-                <TextBlock x:Name="FPSCounter" Text="FPS: 0" Foreground="#00FF00" FontFamily="Consolas" FontSize="10"/>
-            </Border>
+
         </Grid>
     </Grid>
 </Window>
