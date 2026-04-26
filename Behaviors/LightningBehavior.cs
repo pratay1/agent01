@@ -54,7 +54,6 @@ public class LightningBehavior : BodyBehavior
     private float _peakPower = 0f;
     private float _consecutiveDischarges = 0;
     private readonly Queue<PendingZap> _pendingZaps = new();
-    private PhysicsWorld? _world;
 
     private class PendingZap { public RigidBody Target = null!; public float Force; public Vector2 Direction; public float ChainFactor = 1f; }
 
@@ -82,11 +81,10 @@ public class LightningBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        _world = world;
         if (body.IsStatic || body.IsFrozen) return;
         _stateTimer += (float)dt;
         UpdateEnergy(dt);
-        UpdateStateMachine(body, dt);
+        UpdateStateMachine(body, dt, world);
     }
 
     private void UpdateEnergy(double dt)
@@ -95,7 +93,7 @@ public class LightningBehavior : BodyBehavior
             _energy += _profile.RechargeRate * (float)dt;
     }
 
-    private void UpdateStateMachine(RigidBody body, double dt)
+    private void UpdateStateMachine(RigidBody body, double dt, PhysicsWorld world)
     {
         switch (_state)
         {
@@ -106,9 +104,9 @@ public class LightningBehavior : BodyBehavior
             case ZapState.Charging:
                 if (_energy >= _profile.EnergyCapacity * 0.8f) _state = ZapState.Ready;
                 break;
-            case ZapState.Ready:
-                InitiateDischarge(body);
-                break;
+              case ZapState.Ready:
+                 InitiateDischarge(body, world);
+                 break;
             case ZapState.Discharging:
                 if (_pendingZaps.Count == 0)
                 {
@@ -127,14 +125,14 @@ public class LightningBehavior : BodyBehavior
         }
     }
 
-    private void InitiateDischarge(RigidBody body)
+    private void InitiateDischarge(RigidBody body, PhysicsWorld world)
     {
-        if (_energy < _profile.DischargeRate || _world == null) { _state = ZapState.Recharging; return; }
+        if (_energy < _profile.DischargeRate || world == null) { _state = ZapState.Recharging; return; }
         _energy -= _profile.DischargeRate;
         _state = ZapState.Discharging;
         _totalZaps++;
 
-        var targets = FindTargets(body);
+        var targets = FindTargets(body, world);
         if (targets.Count == 0) { _state = ZapState.Recharging; return; }
 
         var target = SelectTarget(body, targets);
@@ -144,11 +142,11 @@ public class LightningBehavior : BodyBehavior
         if (force > _peakPower) _peakPower = force;
     }
 
-    private List<RigidBody> FindTargets(RigidBody body)
+    private List<RigidBody> FindTargets(RigidBody body, PhysicsWorld world)
     {
         var result = new List<RigidBody>();
-        if (_world == null) return result;
-        foreach (var other in _world.Bodies)
+        if (world == null) return result;
+        foreach (var other in world.Bodies)
         {
             if (other == body || other.IsStatic || other.IsFrozen) continue;
             float dist = (float)(body.Position - other.Position).Length;
@@ -173,7 +171,7 @@ public class LightningBehavior : BodyBehavior
 
     public override void OnCollision(RigidBody body, RigidBody other, PhysicsWorld world)
     {
-        _world = world;
+        // No need to store world reference
     }
 
     public void SetType(ElectricType type)

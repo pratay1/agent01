@@ -65,7 +65,6 @@ public class GlueBehavior : BodyBehavior
     private int _bondsFormed = 0;
     private int _bondsBroken = 0;
     private bool _autoBond = true;
-    private PhysicsWorld? _world;
 
     public override BodyType Type => BodyType.Glue;
     public override string Name => "Glue";
@@ -91,7 +90,6 @@ public class GlueBehavior : BodyBehavior
 
     public override void OnUpdate(RigidBody body, double dt, PhysicsWorld world)
     {
-        _world = world;
         if (body.IsStatic || body.IsFrozen || _glueAmount <= 0) return;
         UpdateGlueState(dt);
         MaintainBonds(body, dt);
@@ -119,7 +117,7 @@ public class GlueBehavior : BodyBehavior
             if (kvp.Value.DryingProgress < 1.0)
                 kvp.Value.DryingProgress = Math.Min(1.0, kvp.Value.DryingProgress + dt / Math.Max(0.1, _profile.DryingTime));
 
-            var other = FindBody(kvp.Key);
+            var other = FindBody(body, kvp.Key);
             if (other == null) { toRemove.Add(kvp.Key); continue; }
 
             Vector2 offset = other.Position - body.Position;
@@ -137,7 +135,7 @@ public class GlueBehavior : BodyBehavior
         var toBreak = new List<int>();
         foreach (var kvp in _bonds)
         {
-            var other = FindBody(kvp.Key);
+            var other = FindBody(body, kvp.Key);
             if (other == null) continue;
             Vector2 relVel = other.Velocity - body.Velocity;
             double separationSpeed = Vector2.Dot(relVel, (other.Position - body.Position).Normalized);
@@ -179,7 +177,7 @@ public class GlueBehavior : BodyBehavior
         other.IsStuck = true;
     }
 
-    private RigidBody? FindBody(int id) => _world?.Bodies.FirstOrDefault(b => b.Id == id);
+    private RigidBody? FindBody(RigidBody body, int id) => body.World?.Bodies.FirstOrDefault(b => b.Id == id);
 
     public override void OnCollision(RigidBody body, RigidBody other, PhysicsWorld world)
     {
