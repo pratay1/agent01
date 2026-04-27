@@ -298,40 +298,44 @@ public partial class MainWindow : Window
         _world.CreateBody(new Vector2(x, y), radius, mass, System.Math.Clamp(restitution, 0.1, 0.9));
     }
 
-    private void SpawnBody(Point position)
-    {
-        var behavior = Behaviors.BodyBehaviorFactory.Get(_selectedBodyType);
-        double spawnX = System.Math.Max(position.X, Constants.SidebarWidth + behavior.DefaultRadius + 5);
-        var body = _world.CreateBody(
-            new Vector2(spawnX, position.Y),
-            behavior.DefaultRadius,
-            behavior.DefaultMass,
-            behavior.DefaultRestitution,
-            _selectedBodyType
-        );
-    }
-
-    private void OnUpdate(double dt) 
-    {
-        if (!_isPaused)
+        private void SpawnBody(Point position)
         {
-            // Handle shift+click rapid spawning
-            if (_isShiftSpawning)
-            {
-                _shiftSpawnAccumulator += dt;
-                double spawnInterval = 1.0 / _shiftSpawnRate;
-                int spawnsThisFrame = 0;
-                while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < _maxShiftSpawnsPerFrame)
-                {
-                    SpawnBody(_shiftSpawnPosition);
-                    _shiftSpawnAccumulator -= spawnInterval;
-                    spawnsThisFrame++;
-                }
-            }
-            
-            _world.Step(dt);
+            var behavior = Behaviors.BodyBehaviorFactory.Get(_selectedBodyType);
+            // Ensure bodies spawn to the right of the sidebar panel (Constants.SidebarWidth)
+            double spawnX = System.Math.Max(position.X, Constants.SidebarWidth + behavior.DefaultRadius + 5);
+            var body = _world.CreateBody(
+                new Vector2(spawnX, position.Y),
+                behavior.DefaultRadius,
+                behavior.DefaultMass,
+                behavior.DefaultRestitution,
+                _selectedBodyType
+            );
+            // Log spawning for debugging
+            Logger.LogInfo($"Spawned { _selectedBodyType } body at ({spawnX:F2}, {position.Y:F2})");
         }
-    }
+
+        private void OnUpdate(double dt) 
+        {
+            Logger.LogDebug($"OnUpdate dt={dt:F4}");
+            if (!_isPaused)
+            {
+                // Handle shift+click rapid spawning
+                if (_isShiftSpawning)
+                {
+                    _shiftSpawnAccumulator += dt;
+                    double spawnInterval = 1.0 / _shiftSpawnRate;
+                    int spawnsThisFrame = 0;
+                    while (_shiftSpawnAccumulator >= spawnInterval && spawnsThisFrame < _maxShiftSpawnsPerFrame)
+                    {
+                        SpawnBody(_shiftSpawnPosition);
+                        _shiftSpawnAccumulator -= spawnInterval;
+                        spawnsThisFrame++;
+                    }
+                }
+                
+                _world.Step(dt);
+            }
+        }
 
     private void OnRender(double dt)
     {
