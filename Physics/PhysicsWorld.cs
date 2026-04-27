@@ -17,7 +17,7 @@ public class PhysicsWorld
     private bool _isPaused;
 
     public double GroundY { get; set; } = 600;
-    public double LeftBoundary { get; set; } = 240;  // Sidebar is 240px wide
+    public double LeftBoundary { get; set; } = Constants.SidebarWidth;  // Sidebar width
     public double RightBoundary { get; set; } = 1280;
     public double TopBoundary { get; set; } = 0;
     public double TimeScale { get; set; } = 1.0;
@@ -72,7 +72,7 @@ public class PhysicsWorld
     {
         RightBoundary = width;
         GroundY = height;
-        LeftBoundary = 240;  // Sidebar is 240px wide
+        LeftBoundary = Constants.SidebarWidth;  // Sidebar width
     }
 
      public bool TryGetBodyById(int id, out RigidBody? body) => _bodyMap.TryGetValue(id, out body);

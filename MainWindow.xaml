@@ -167,7 +167,7 @@
                     <GradientStop Color="#0A0A14" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
-            
+
             <!-- Subtle animated grid pattern overlay -->
             <Border.OpacityMask>
                 <VisualBrush Stretch="None" TileMode="Tile" Viewport="0,0,60,60" ViewportUnits="Absolute">
@@ -176,7 +176,7 @@
                     </VisualBrush.Visual>
                 </VisualBrush>
             </Border.OpacityMask>
-            
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -187,170 +187,171 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                
+
                 <!-- Floating geometric accent shapes -->
                 <Canvas Grid.RowSpan="7" IsHitTestVisible="False">
-                    <Ellipse Canvas.Left="100" Canvas.Top="80" Width="300" Height="300" Fill="#1A1A28" Opacity="0.5"/>
-                    <Ellipse Canvas.Left="-50" Canvas.Top="200" Width="200" Height="200" Fill="#16213E" Opacity="0.3"/>
-                    <Path Data="M1200,100 L1300,200 L1100,200 Z" Fill="#0F3460" Opacity="0.2"/>
-                    <Ellipse Canvas.Left="1100" Canvas.Top="300" Width="150" Height="150" Fill="#16213E" Opacity="0.25"/>
+                    <Ellipse Canvas.Left="120" Canvas.Top="120" Width="400" Height="400" Fill="#1A1A28" Opacity="0.45"/>
+                    <Ellipse Canvas.Left="-80" Canvas.Top="280" Width="220" Height="220" Fill="#16213E" Opacity="0.25"/>
+                    <Path Data="M1220,140 L1320,260 L1100,260 Z" Fill="#0F3460" Opacity="0.15"/>
+                    <Ellipse Canvas.Left="1140" Canvas.Top="360" Width="180" Height="180" Fill="#16213E" Opacity="0.2"/>
                 </Canvas>
-                
+
                 <!-- Top decorative line -->
                 <Border Grid.Row="1" Height="2" Background="#4D4D7A" HorizontalAlignment="Center" Width="80" Margin="0,0,0,40" Opacity="0.5"/>
-                
+
                 <!-- Main Title -->
                 <StackPanel Grid.Row="2" HorizontalAlignment="Center">
-                    <TextBlock Text="PHYSICS AGENT" 
-                               FontSize="64" 
+                    <TextBlock Text="PHYSICS" 
+                               FontSize="48" 
                                FontWeight="Bold" 
                                Foreground="#E8E8F0" 
                                FontFamily="Segoe UI, Consolas"
                                HorizontalAlignment="Center"
-                               Margin="0,0,0,10">
+                               Margin="0,0,0,4">
                         <TextBlock.Effect>
-                            <DropShadowEffect Color="#4D4D7A" Direction="315" ShadowDepth="4" BlurRadius="20" Opacity="0.6"/>
+                            <DropShadowEffect Color="#4D4D7A" Direction="315" ShadowDepth="4" BlurRadius="16" Opacity="0.5"/>
                         </TextBlock.Effect>
                     </TextBlock>
-                    <TextBlock Text="AGENT" 
-                               FontSize="14" 
-                               FontWeight="Normal" 
+                    <TextBlock Text="SANDBOX" 
+                               FontSize="48" 
+                               FontWeight="Bold" 
                                Foreground="#8B5CF6" 
                                FontFamily="Segoe UI, Consolas"
                                HorizontalAlignment="Center"
                                Margin="0,0,0,30">
                         <TextBlock.Effect>
-                            <DropShadowEffect Color="#8B5CF6" Direction="315" ShadowDepth="2" BlurRadius="10" Opacity="0.5"/>
+                            <DropShadowEffect Color="#8B5CF6" Direction="315" ShadowDepth="4" BlurRadius="16" Opacity="0.4"/>
                         </TextBlock.Effect>
                     </TextBlock>
                 </StackPanel>
-                
-                <!-- Tagline -->
-                <TextBlock Grid.Row="3" Text="physics | simulation | experimentation" 
-                           FontSize="12" 
-                           Foreground="#6B7280" 
-                           FontFamily="Segoe UI, Consolas"
+
+                <!-- Subtitle -->
+                <TextBlock Grid.Row="3" Text="Interactive 2D Physics Simulation" 
+                           FontSize="14" 
+                           Foreground="#9CA3AF" 
+                           FontFamily="Segoe UI"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,50"/>
-                
+
                 <!-- Menu Buttons Container -->
-                <StackPanel Grid.Row="4" HorizontalAlignment="Center" Width="320">
+                <StackPanel Grid.Row="4" HorizontalAlignment="Center" Width="360">
                     <!-- Primary Button: 2D Physics Sandbox -->
-                    <Button x:Name="Start2DButton" 
-                            Click="Start2DPhysics_Click"
-                            Style="{StaticResource TitleScreenButton}" 
-                            Margin="0,0,0,16"
-                            Height="56"
-                            Width="320">
+<Button x:Name="Start2DButton" 
+                             Click="Start2DPhysics_Click"
+                             Style="{StaticResource TitleScreenButton}" 
+                             Margin="0,0,0,16"
+                             Height="60"
+                             Width="360">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#8B5CF6" Offset="0"/>
+                                <GradientStop Color="#6366F1" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <Button.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#A78BFA" Offset="0"/>
+                                <GradientStop Color="#818CF8" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.BorderBrush>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Path Data="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" 
-                                  Stroke="#8B5CF6" StrokeThickness="2" Width="20" Height="20"/>
+                                  Stroke="#FFFFFF" StrokeThickness="2.5" Width="24" Height="24"/>
                             <TextBlock Text="  2D PHYSICS SANDBOX" 
-                                       FontSize="14" 
+                                       FontSize="15" 
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
-                    <!-- Secondary Button: 3D Ragdoll Training (Coming Soon) -->
-                    <Button Style="{StaticResource TitleScreenButton}"
-                            IsEnabled="False"
-                            Height="48"
-                            Width="320"
-                            Margin="0,0,0,16">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Opacity="0.5">
-                            <Path Data="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" 
-                                  Stroke="#6B7280" StrokeThickness="1.5" Width="18" Height="18"/>
-                            <TextBlock Text="  3D RAGDOLL TRAINING" 
-                                       FontSize="13" 
-                                       FontWeight="Normal"
-                                       VerticalAlignment="Center"
-                                       Foreground="#6B7280"/>
-                        </StackPanel>
-                    </Button>
-                    
-                    <!-- Divider -->
-                    <Border Height="1" Background="#1F1F2E" Margin="0,20,0,20"/>
-                    
-                    <!-- Feature Badges -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,30">
-                        <Border Background="#1A1A28" CornerRadius="12" Padding="12,6" Margin="0,0,8,0">
+
+                     <!-- Secondary Button: 3D Ragdoll Training (Coming Soon) -->
+                     <Button Style="{StaticResource TitleScreenButton}"
+                             IsEnabled="False"
+                             Height="52"
+                             Width="360"
+                             Margin="0,0,0,16"
+                             Background="#1A1A28"
+                             BorderBrush="#2A2A3A">
+                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Opacity="0.6">
+                             <Path Data="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" 
+                                   Stroke="#6B7280" StrokeThickness="1.5" Width="20" Height="20"/>
+                             <TextBlock Text="  3D RAGDOLL TRAINING" 
+                                        FontSize="13" 
+                                        FontWeight="Normal"
+                                        VerticalAlignment="Center"
+                                        Foreground="#6B7280"/>
+                         </StackPanel>
+                     </Button>
+
+                     <!-- Quit Button -->
+                     <Button x:Name="QuitButton"
+                             Click="Quit_Click"
+                             Style="{StaticResource TitleScreenButton}"
+                             Height="52"
+                             Width="360"
+                             Margin="0,0,0,16"
+                             Background="#1E1E1E"
+                             BorderBrush="#2D2D2D">
+                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                             <Path Data="M6 18L18 6M6 6l12 12" 
+                                   Stroke="#FFFFFF" StrokeThickness="2" Width="12" Height="12"/>
+                             <TextBlock Text="  QUIT" 
+                                        FontSize="13" 
+                                        FontWeight="Normal"
+                                        VerticalAlignment="Center"/>
+                         </StackPanel>
+                     </Button>
+
+                    <!-- Feature badges -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                        <Border Background="#1A1A28" CornerRadius="8" Padding="10,4" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="6" Height="6" Fill="#10B981" Margin="0,0,6,0"/>
-                                <TextBlock Text="17 Body Types" FontSize="10" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
+                                <Ellipse Width="5" Height="5" Fill="#10B981" Margin="0,0,5,0"/>
+                                <TextBlock Text="17 Body Types" FontSize="9" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="#1A1A28" CornerRadius="12" Padding="12,6" Margin="0,0,8,0">
+                        <Border Background="#1A1A28" CornerRadius="8" Padding="10,4" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="6" Height="6" Fill="#3B82F6" Margin="0,0,6,0"/>
-                                <TextBlock Text="Real-time Physics" FontSize="10" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
+                                <Ellipse Width="5" Height="5" Fill="#3B82F6" Margin="0,0,5,0"/>
+                                <TextBlock Text="Real-time Physics" FontSize="9" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="#1A1A28" CornerRadius="12" Padding="12,6">
+                        <Border Background="#1A1A28" CornerRadius="8" Padding="10,4">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="6" Height="6" Fill="#F59E0B" Margin="0,0,6,0"/>
-                                <TextBlock Text="Chain Reactions" FontSize="10" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
+                                <Ellipse Width="5" Height="5" Fill="#F59E0B" Margin="0,0,5,0"/>
+                                <TextBlock Text="Chain Reactions" FontSize="9" Foreground="#9CA3AF" FontFamily="Segoe UI"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                    
-                    <!-- Quit Button -->
-                    <Button Content="QUIT" 
-                            Click="Quit_Click"
-                            Style="{StaticResource TitleScreenButton}"
-                            Height="44"
-                            Width="320"
-                            Background="#1A1A28"
-                            BorderBrush="#2A2A3A"
-                            Foreground="#6B7280"
-                            FontSize="13">
-                        <Button.Resources>
-                            <Style TargetType="Button" BasedOn="{StaticResource TitleScreenButton}">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}"
-                                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                                    CornerRadius="6"
-                                                    Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                            </Button.Resources>
-                    </Button>
                 </StackPanel>
-                
+
                 <!-- Footer -->
                 <StackPanel Grid.Row="5" HorizontalAlignment="Center">
                     <TextBlock Text="created by pratay and kilo agent" 
-                               FontSize="10" 
-                               Foreground="#374151" 
-                               FontFamily="Segoe UI, Consolas"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="physics-sandbox v2.0" 
-                               FontSize="9" 
+                               FontSize="11" 
                                Foreground="#4B5563" 
                                FontFamily="Segoe UI"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="physics-sandbox v2.0" 
+                               FontSize="10" 
+                               Foreground="#374151" 
+                               FontFamily="Segoe UI"
                                HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
+                               Margin="0,3,0,0"/>
                 </StackPanel>
-                
-                <!-- Corner decorations -->
-                <Border Grid.RowSpan="7" Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,30,0,0" IsHitTestVisible="False">
+
+                <!-- Corner accent -->
+                <Border Grid.RowSpan="7" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,24,0,0" IsHitTestVisible="False">
                     <Border.Background>
                         <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                            <GradientStop Color="#3B82F6" Offset="0"/>
+                            <GradientStop Color="#8B5CF6" Offset="0"/>
                             <GradientStop Color="Transparent" Offset="1"/>
                         </RadialGradientBrush>
                     </Border.Background>
                 </Border>
             </Grid>
         </Border>
-        
+
         <!-- Game UI - Hidden until game starts -->
         <Grid x:Name="GameUI" Visibility="Collapsed">
             <Grid.RowDefinitions>

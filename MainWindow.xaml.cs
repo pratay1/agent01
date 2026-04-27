@@ -156,7 +156,8 @@ public partial class MainWindow : Window
         SelectedBodyColor.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex));
         DescriptionText.Text = GetBodyTypeDescription();
 
-        // Update button states: selected uses body color, unselected are muted
+        // Update button states: selected uses full opacity, unselected are muted
+        // Using opacity preserves style triggers (IsMouseOver/IsPressed)
         foreach (BodyType type in Enum.GetValues<BodyType>())
         {
             var btnName = $"Btn{type}";
@@ -164,23 +165,7 @@ public partial class MainWindow : Window
             if (btn != null)
             {
                 bool isSelected = type == _selectedBodyType;
-                var (_, btnColorHex) = _bodyInfo[type];
-
-                var bg = isSelected
-                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(btnColorHex))
-                    : new SolidColorBrush(Color.FromRgb(26, 26, 26)); // #1A1A1A
-
-                var border = isSelected
-                    ? new SolidColorBrush((Color)ColorConverter.ConvertFromString(btnColorHex))
-                    : new SolidColorBrush(Color.FromRgb(42, 42, 42)); // #2A2A2A
-
-                var fg = isSelected
-                    ? new SolidColorBrush(Colors.White)
-                    : new SolidColorBrush(Color.FromRgb(170, 170, 170)); // #AAAAAA
-
-                btn.Background = bg;
-                btn.BorderBrush = border;
-                btn.Foreground = fg;
+                btn.Opacity = isSelected ? 1.0 : 0.6;
             }
         }
     }
@@ -316,7 +301,7 @@ public partial class MainWindow : Window
     private void SpawnBody(Point position)
     {
         var behavior = Behaviors.BodyBehaviorFactory.Get(_selectedBodyType);
-        double spawnX = System.Math.Max(position.X, 240 + behavior.DefaultRadius + 5);
+        double spawnX = System.Math.Max(position.X, Constants.SidebarWidth + behavior.DefaultRadius + 5);
         var body = _world.CreateBody(
             new Vector2(spawnX, position.Y),
             behavior.DefaultRadius,
