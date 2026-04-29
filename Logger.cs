@@ -74,7 +74,7 @@ public static class Logger
             _fileWriter?.Dispose();
             _fileWriter = null;
         }
-        catch { }
+        catch (Exception ex) { Console.Error.WriteLine($"Logger shutdown failed: {ex}"); }
     }
 
     private static void LogInternal(LogLevel level, string message, Exception? ex = null)
@@ -105,13 +105,13 @@ public static class Logger
                 Console.WriteLine(entry);
                 Console.ForegroundColor = prev;
             }
-            catch { }
+            catch (Exception ex) { Console.Error.WriteLine($"Logger console write failed: {ex}"); }
 
             try
             {
                 _fileWriter?.WriteLine(entry);
             }
-            catch { }
+            catch (Exception ex) { Console.Error.WriteLine($"Logger file write failed: {ex}"); }
         }
 
         _entries.Enqueue(entry);

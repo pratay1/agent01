@@ -1103,7 +1103,7 @@ public class TurboBehavior : BodyBehavior
                         break;
                 }
             }
-            catch { }
+            catch (Exception ex) { DebugLog.WriteLine($"Failed to parse state line in TurboBehavior: {ex}"); }
         }
     }
 

@@ -48,7 +48,7 @@ public class BlackHoleBehavior : BodyBehavior
 
         foreach (var toRemove in bodiesToRemove)
         {
-            try { world.RemoveBody(toRemove); } catch { }
+            try { world.RemoveBody(toRemove); } catch (Exception ex) { DebugLog.WriteLine($"Failed to remove body in BlackHoleBehavior: {ex}"); }
         }
 
         body.Radius = System.Math.Min(80, body.Radius * 1.002);
