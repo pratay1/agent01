@@ -384,6 +384,7 @@
                             </Border>
                             <Border Width="1" Background="#2D2D2D" VerticalAlignment="Center" Margin="0,0,16,0"/>
                             <TextBlock x:Name="StatusText" Text="0 bodies" Style="{StaticResource StatusText}"/>
+                    <TextBlock x:Name="ComboText" Text="Combo: 0" Style="{StaticResource StatusText}" Margin="8,0,0,0"/>
                             <Border Width="16"/>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <Border Style="{StaticResource SelectedBodyChip}" Margin="0,0,8,0">
@@ -397,6 +398,15 @@
                             </StackPanel>
                         </StackPanel>
                         <StackPanel x:Name="SettingsBarPanel" Orientation="Vertical" Visibility="Collapsed" VerticalAlignment="Center">
+            <!-- Night Mode Toggle -->
+            <CheckBox x:Name="NightModeCheckBox" Content="Night Mode" IsChecked="False" Checked="NightModeCheckBox_Checked" Unchecked="NightModeCheckBox_Unchecked" Margin="0,4,0,0"/>
+            <!-- Grid Size Slider -->
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <TextBlock Text="Grid Size:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+                <Slider x:Name="GridSizeSlider" Minimum="10" Maximum="100" Value="20" Width="120" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="GridSizeSlider_ValueChanged" Margin="8,0,0,0"/>
+            <!-- Randomizer Button -->
+            <Button x:Name="RandomizeButton" Content="Randomize!" Click="RandomizeButton_Click" Style="{StaticResource ActionButton}" Margin="0,8,0,0" Width="100"/>
+            </StackPanel>
                             <CheckBox x:Name="WindCheckBox" Content="Enable Wind" IsChecked="False" Checked="WindCheckBox_Checked" Unchecked="WindCheckBox_Unchecked"/>
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                 <TextBlock Text="Shift Spawn Rate:" FontSize="10" Foreground="#CCCCCC" VerticalAlignment="Center"/>

@@ -10,6 +10,14 @@ namespace PhysicsSandbox;
 
 public partial class MainWindow : Window
 {
+    // ---------- New fields for fun/QoL features ----------
+    private bool _nightMode = false;
+    private int _comboCount = 0;
+    private DateTime _lastComboTimestamp = DateTime.MinValue;
+    private readonly HashSet<int> _explodedBodies = new();
+    private int _gridSize = 20;
+    // ---------------------------------------------------
+{
     private PhysicsWorld _world;
     private Renderer _renderer;
     private GameLoop _gameLoop;
@@ -212,6 +220,7 @@ public partial class MainWindow : Window
                 case Key.Space: TogglePause(); break;
                 case Key.C: ClearWorld(); break;
                 case Key.G: ToggleGravity(); break;
+                case Key.W: ToggleWind(); break; // allow W key for wind
                 case Key.OemComma: ToggleWind(); break;
                 case Key.OemPlus: _world.TimeScale = System.Math.Min(2.0, _world.TimeScale + 0.1); break;
                 case Key.OemMinus: _world.TimeScale = System.Math.Max(0.1, _world.TimeScale - 0.1); break;
@@ -223,6 +232,14 @@ public partial class MainWindow : Window
         {
             var pos = e.GetPosition(GameCanvas);
             
+            // Snap to grid when Ctrl is held
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                double gx = Math.Round(pos.X / _gridSize) * _gridSize;
+                double gy = Math.Round(pos.Y / _gridSize) * _gridSize;
+                pos = new Point(gx, gy);
+            }
+
             // Check if Shift is held for rapid spawning
             if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
             {
@@ -332,8 +349,27 @@ public partial class MainWindow : Window
                         spawnsThisFrame++;
                     }
                 }
-                
+
                 _world.Step(dt);
+
+                // Combo detection: count new explosions
+                foreach (var body in _world.Bodies)
+                {
+                    if (body.HasExploded && !_explodedBodies.Contains(body.Id))
+                    {
+                        _explodedBodies.Add(body.Id);
+                        _comboCount++;
+                        _lastComboTimestamp = DateTime.Now;
+                        UpdateComboUI();
+                    }
+                }
+                // Reset combo if timeout (2 seconds)
+                if (_comboCount > 0 && (DateTime.Now - _lastComboTimestamp).TotalSeconds > 2)
+                {
+                    _comboCount = 0;
+                    _explodedBodies.Clear();
+                    UpdateComboUI();
+                }
             }
         }
 
@@ -395,7 +431,12 @@ public partial class MainWindow : Window
             SetWindActive(!_world.ForceManager.Wind.IsActive); 
     }
 
-    // Settings handlers
+        // Update combo counter UI
+        private void UpdateComboUI()
+        {
+            ComboText.Text = $"Combo: {_comboCount}";
+        }
+
     private void WindCheckBox_Checked(object sender, RoutedEventArgs e)
     {
         if (_world != null && !_updatingWindCheckbox)
