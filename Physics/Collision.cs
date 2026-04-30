@@ -18,7 +18,8 @@ public static class Collision
 
             var candidates = hash.Query(a);
             foreach (var b in candidates)
-            {
+    {
+        if (b == null) continue;
                 if (b.Id <= a.Id || b.IsStatic && a.IsStatic) continue;
                 Resolve(a, b);
             }

@@ -561,7 +561,7 @@ public class PlasmaBehavior : BodyBehavior
                     case "IsDischarging": _isDischarging = bool.Parse(parts[1]); break;
                 }
             }
-            catch (Exception ex) { DebugLog.WriteLine($"Failed to parse state line in PlasmaBehavior: {ex}"); }
+            catch (Exception ex) { DebugLog.LogError($"Failed to parse state line in PlasmaBehavior: {ex}", ex); }
         }
     }
 

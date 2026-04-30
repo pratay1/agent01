@@ -105,13 +105,13 @@ public static class Logger
                 Console.WriteLine(entry);
                 Console.ForegroundColor = prev;
             }
-            catch (Exception ex) { Console.Error.WriteLine($"Logger console write failed: {ex}"); }
+            catch (Exception exConsole) { Console.Error.WriteLine($"Logger console write failed: {exConsole}"); }
 
             try
             {
                 _fileWriter?.WriteLine(entry);
             }
-            catch (Exception ex) { Console.Error.WriteLine($"Logger file write failed: {ex}"); }
+            catch (Exception exFile) { Console.Error.WriteLine($"Logger file write failed: {exFile}"); }
         }
 
         _entries.Enqueue(entry);

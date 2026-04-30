@@ -17,7 +17,6 @@ public partial class MainWindow : Window
     private readonly HashSet<int> _explodedBodies = new();
     private int _gridSize = 20;
     // ---------------------------------------------------
-{
     private PhysicsWorld _world;
     private Renderer _renderer;
     private GameLoop _gameLoop;

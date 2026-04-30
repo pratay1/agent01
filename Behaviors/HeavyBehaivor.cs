@@ -1257,7 +1257,7 @@ public class HeavyBehavior : BodyBehavior
                         break;
                 }
             }
-            catch (Exception ex) { DebugLog.WriteLine($"Failed to parse state line in HeavyBehaivor: {ex}"); }
+            catch (Exception ex) { DebugLog.LogError($"Failed to parse state line in HeavyBehaivor: {ex}", ex); }
         }
 
         if (_heavyProfiles.TryGetValue(_currentMaterial, out var profile))

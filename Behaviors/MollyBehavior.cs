@@ -153,6 +153,6 @@ public class MollyBehavior : BodyBehavior
             other2.ApplyImpulse(dir * force * 30);
         }
 
-        try { world.RemoveBody(body); } catch (Exception ex) { DebugLog.WriteLine($"Failed to remove body in MollyBehavior: {ex}"); }
+        try { world.RemoveBody(body); } catch (Exception ex) { DebugLog.LogError($"Failed to remove body in MollyBehavior: {ex}", ex); }
     }
 }
